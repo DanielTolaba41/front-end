@@ -1,0 +1,51 @@
+<!-- src/app/pages/dashboard/patient-dashboard/patient-dashboard.component.html -->
+
+<div class="dashboard-container" [class.sidebar-open]="sidebarOpen">
+  <!-- Sidebar -->
+  <aside class="dashboard-sidebar" [class.sidebar-open]="sidebarOpen">
+    <nav class="sidebar-nav">
+      <a class="nav-item" routerLink="appointments" routerLinkActive="active">
+        Mis Citas
+      </a>
+      <a class="nav-item" routerLink="new-appointment" routerLinkActive="active">
+        Nueva Cita
+      </a>
+      <a class="nav-item" routerLink="profile" routerLinkActive="active">
+        Mi Perfil
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <button (click)="logout()" class="logout-button">
+        Cerrar Sesión
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="dashboard-main">
+    <!-- Header -->
+    <header class="dashboard-header">
+      <div class="header-content">
+        <div class="header-left">
+          <button (click)="toggleSidebar()" class="mobile-menu-button">
+            ☰
+          </button>
+          <div class="header-title">
+            <h1>Dashboard</h1>
+            <p>{{ getCurrentDate() }}</p>
+          </div>
+        </div>
+
+        <div class="user-profile" (click)="toggleProfileMenu()">
+          <img [src]="user.profileImage" [alt]="user.firstName">
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="dashboard-content">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+</div>

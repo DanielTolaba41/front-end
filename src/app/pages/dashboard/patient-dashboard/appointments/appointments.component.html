@@ -1,0 +1,79 @@
+<div class="appointments-container">
+  <!-- Loading and Error States -->
+  <div *ngIf="isLoading" class="loading-indicator">
+    <span class="loader"></span>
+    Cargando citas...
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <div class="calendar-section">
+    <div class="calendar-header">
+      <button class="month-nav" (click)="previousMonth()">←</button>
+      <h2>{{ currentMonth | date:'MMMM yyyy' }}</h2>
+      <button class="month-nav" (click)="nextMonth()">→</button>
+    </div>
+
+    <div class="calendar">
+      <div class="weekdays">
+        <div class="weekday">Dom</div>
+        <div class="weekday">Lun</div>
+        <div class="weekday">Mar</div>
+        <div class="weekday">Mié</div>
+        <div class="weekday">Jue</div>
+        <div class="weekday">Vie</div>
+        <div class="weekday">Sáb</div>
+      </div>
+
+      <div class="weeks">
+        <div class="week" *ngFor="let week of weeks">
+          <div class="day"
+               *ngFor="let date of week"
+               [class.today]="isToday(date)"
+               [class.selected]="selectedDate?.toDateString() === date.toDateString()"
+               [class.other-month]="!isSelectedMonth(date)"
+               (click)="selectDate(date)">
+            <span class="date-number">{{ date | date:'d' }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="appointments-details" *ngIf="selectedDate">
+    <h3>Citas para {{ selectedDate | date:'fullDate' }}</h3>
+    <div class="appointments-list">
+      <div class="appointment-card"
+           *ngFor="let appointment of getAppointmentsForDate(selectedDate)"
+           [class]="getStatusClass(appointment.status)">
+        <div class="appointment-header">
+          <span class="appointment-time">{{ appointment.time }}</span>
+          <span class="appointment-status">{{ appointment.status }}</span>
+        </div>
+        <div class="appointment-info-grid">
+          <div class="info-item">
+            <label>Especialidad</label>
+            <span>{{ appointment.specialty }}</span>
+          </div>
+          <div class="info-item">
+            <label>Doctor</label>
+            <span>{{ appointment.doctorName }}</span>
+          </div>
+          <div class="info-item">
+            <label>Consultorio</label>
+            <span>{{ appointment.consultingRoom }}</span>
+          </div>
+          <div class="info-item description">
+            <label>Motivo de la consulta</label>
+            <span>{{ appointment.description }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="no-appointments" *ngIf="getAppointmentsForDate(selectedDate).length === 0">
+        No hay citas programadas para este día
+      </div>
+    </div>
+  </div>
+</div>

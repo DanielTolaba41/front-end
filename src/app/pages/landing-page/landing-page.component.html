@@ -1,0 +1,107 @@
+
+<div class="landing-page">
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <img src="/images/logo.png" alt="Logo" class="logo">
+      <nav class="nav-links">
+        <a href="#features">Características</a>
+        <a href="#how-it-works">Cómo Funciona</a>
+        <a href="#contact">Contacto</a>
+      </nav>
+      <div class="auth-buttons">
+        <button class="btn-login" (click)="navigateToLogin()">Iniciar Sesión</button>
+        <button class="btn-signup" (click)="navigateToSignup()">Registrarse</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Tu Salud, Nuestra Prioridad</h1>
+      <p>Agenda tus citas médicas de manera fácil y segura. Conectamos pacientes con los mejores profesionales de la salud.</p>
+      <button class="cta-button" (click)="navigateToSignup()">
+        Comienza Ahora
+      </button>
+    </div>
+    <div class="hero-image">
+      <img src="/images/hero-doctor.jpg" alt="Doctor">
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section id="features" class="features">
+    <h2>Por qué elegirnos</h2>
+    <div class="features-grid">
+      <div class="feature-card" *ngFor="let feature of features">
+        <img [src]="feature.icon" [alt]="feature.title">
+        <h3>{{feature.title}}</h3>
+        <p>{{feature.description}}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- How it Works -->
+  <section id="how-it-works" class="how-it-works">
+    <h2>Cómo Funciona</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-number">1</div>
+        <h3>Regístrate</h3>
+        <p>Crea tu cuenta en minutos</p>
+      </div>
+      <div class="step">
+        <div class="step-number">2</div>
+        <h3>Encuentra tu doctor</h3>
+        <p>Elige entre nuestros especialistas</p>
+      </div>
+      <div class="step">
+        <div class="step-number">3</div>
+        <h3>Agenda tu cita</h3>
+        <p>Selecciona el horario que prefieras</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section id="contact" class="contact">
+    <div class="contact-content">
+      <h2>¿Necesitas ayuda?</h2>
+      <p>Estamos aquí para responder tus preguntas</p>
+      <button class="contact-button">Contáctanos</button>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="footer-logo">
+        <img src="/images/logo.png" alt="Logo" class="logo">
+      </div>
+      <div class="footer-links">
+        <div class="link-group">
+          <h4>Compañía</h4>
+          <a href="#">Sobre Nosotros</a>
+          <a href="#">Carreras</a>
+          <a href="#">Blog</a>
+        </div>
+        <div class="link-group">
+          <h4>Legal</h4>
+          <a href="#">Privacidad</a>
+          <a href="#">Términos</a>
+          <a href="#">Cookies</a>
+        </div>
+        <div class="link-group">
+          <h4>Contacto</h4>
+          <a href="#">Soporte</a>
+          <a href="#">Ventas</a>
+          <a href="#">Prensa</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2024 Sistema de Citas Médicas. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+</div>

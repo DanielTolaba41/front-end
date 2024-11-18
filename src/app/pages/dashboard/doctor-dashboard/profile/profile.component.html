@@ -1,0 +1,111 @@
+<div class="profile-container">
+  <div class="profile-header">
+    <div class="profile-banner">
+      <div class="profile-image">
+        <img [src]="'/images/avatar.png'" [alt]="doctor.firstName + ' ' + doctor.lastName">
+      </div>
+      <div class="profile-title">
+        <h1>Dr. {{ doctor.firstName }} {{ doctor.lastName }}</h1>
+        <p class="specialty">{{ doctor.specialty }}</p>
+      </div>
+    </div>
+    <div class="profile-actions">
+      <button class="edit-button" (click)="toggleEditMode()" *ngIf="!editMode">
+        <span class="button-icon">✏️</span> Editar Perfil
+      </button>
+    </div>
+  </div>
+
+  <div class="profile-content">
+    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-form">
+      <div class="form-grid">
+        <!-- Información Personal -->
+        <div class="form-section">
+          <h2>Información Personal</h2>
+          <div class="form-group">
+            <label for="firstName">Nombre</label>
+            <input id="firstName" type="text" formControlName="firstName" [readonly]="!editMode">
+            <div class="error-message" *ngIf="profileForm.get('firstName')?.errors?.['required'] && profileForm.get('firstName')?.touched">
+              El nombre es requerido
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="lastName">Apellido</label>
+            <input id="lastName" type="text" formControlName="lastName" [readonly]="!editMode">
+            <div class="error-message" *ngIf="profileForm.get('lastName')?.errors?.['required'] && profileForm.get('lastName')?.touched">
+              El apellido es requerido
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="email">Correo Electrónico</label>
+            <input id="email" type="email" formControlName="email" [readonly]="!editMode">
+            <div class="error-message" *ngIf="profileForm.get('email')?.errors?.['required'] && profileForm.get('email')?.touched">
+              El correo es requerido
+            </div>
+            <div class="error-message" *ngIf="profileForm.get('email')?.errors?.['email'] && profileForm.get('email')?.touched">
+              Ingrese un correo válido
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="phone">Teléfono</label>
+            <input id="phone" type="tel" formControlName="phone" [readonly]="!editMode">
+            <div class="error-message" *ngIf="profileForm.get('phone')?.errors?.['required'] && profileForm.get('phone')?.touched">
+              El teléfono es requerido
+            </div>
+          </div>
+        </div>
+
+        <!-- Información Profesional -->
+        <div class="form-section">
+          <h2>Información Profesional</h2>
+          <div class="form-group">
+            <label for="specialty">Especialidad</label>
+            <input id="specialty" type="text" formControlName="specialty" [readonly]="!editMode">
+            <div class="error-message" *ngIf="profileForm.get('specialty')?.errors?.['required'] && profileForm.get('specialty')?.touched">
+              La especialidad es requerida
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="professionalLicense">Licencia Profesional</label>
+            <input id="professionalLicense" type="text" formControlName="professionalLicense" [readonly]="!editMode">
+            <div class="error-message" *ngIf="profileForm.get('professionalLicense')?.errors?.['required'] && profileForm.get('professionalLicense')?.touched">
+              La licencia profesional es requerida
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="consultingRoom">Consultorio</label>
+            <input id="consultingRoom" type="text" formControlName="consultingRoom" [readonly]="!editMode">
+            <div class="error-message" *ngIf="profileForm.get('consultingRoom')?.errors?.['required'] && profileForm.get('consultingRoom')?.touched">
+              El consultorio es requerido
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="schedule">Horario de Atención</label>
+            <input id="schedule" type="text" formControlName="schedule" [readonly]="!editMode">
+            <div class="error-message" *ngIf="profileForm.get('schedule')?.errors?.['required'] && profileForm.get('schedule')?.touched">
+              El horario es requerido
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Acerca de -->
+      <div class="form-section full-width">
+        <h2>Acerca de</h2>
+        <div class="form-group">
+          <textarea id="about" formControlName="about" rows="4" [readonly]="!editMode"></textarea>
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="form-actions" *ngIf="editMode">
+        <button type="button" class="cancel-button" (click)="cancelEdit()">
+          <span>Cancelar</span>
+        </button>
+        <button type="submit" class="save-button" [disabled]="profileForm.invalid">
+          <span>Guardar Cambios</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -1,0 +1,71 @@
+<div class="control-container">
+  <div class="control-header">
+    <h2>Control de Citas</h2>
+    <div class="control-filters">
+      <div class="filter-item">
+        <label for="date">Fecha:</label>
+        <input
+          type="date"
+          id="date"
+          [value]="selectedDate.toISOString().split('T')[0]"
+          (change)="onDateChange($event)">
+      </div>
+      <div class="filter-item">
+        <label for="status">Estado:</label>
+        <select id="status" [(ngModel)]="filterStatus">
+          <option value="todos">Todos</option>
+          <option value="pendiente">Pendientes</option>
+          <option value="completada">Completadas</option>
+          <option value="cancelada">Canceladas</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="appointments-list">
+    <div class="appointment-card" *ngFor="let appointment of getFilteredAppointments()">
+      <div class="appointment-header">
+        <div class="time-badge">{{ appointment.time }}</div>
+        <div class="status-badge" [class.status-pendiente]="appointment.status === 'pendiente'"
+                                 [class.status-completada]="appointment.status === 'completada'"
+                                 [class.status-cancelada]="appointment.status === 'cancelada'">
+          {{ appointment.status }}
+        </div>
+      </div>
+
+      <div class="appointment-details">
+        <div class="patient-info">
+          <h3>{{ appointment.patientName }}</h3>
+          <p>{{ appointment.appointmentType }}</p>
+          <p class="room">{{ appointment.consultingRoom }}</p>
+        </div>
+        <p class="description">{{ appointment.description }}</p>
+      </div>
+
+      <div class="status-controls">
+        <button
+          class="status-btn pending"
+          [class.active]="appointment.status === 'pendiente'"
+          (click)="changeStatus(appointment, 'pendiente')">
+          Pendiente
+        </button>
+        <button
+          class="status-btn completed"
+          [class.active]="appointment.status === 'completada'"
+          (click)="changeStatus(appointment, 'completada')">
+          Completada
+        </button>
+        <button
+          class="status-btn cancelled"
+          [class.active]="appointment.status === 'cancelada'"
+          (click)="changeStatus(appointment, 'cancelada')">
+          Cancelada
+        </button>
+      </div>
+    </div>
+
+    <div class="no-appointments" *ngIf="getFilteredAppointments().length === 0">
+      No hay citas para mostrar
+    </div>
+  </div>
+</div>

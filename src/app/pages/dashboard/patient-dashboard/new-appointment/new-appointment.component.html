@@ -1,0 +1,140 @@
+<!-- src/app/pages/dashboard/patient-dashboard/new-appointment/new-appointment.component.html -->
+<div class="new-appointment-container">
+  <h2>Agendar Nueva Cita</h2>
+
+  <!-- Mensajes de estado -->
+  <div *ngIf="errorMessage" class="alert alert-error" role="alert">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="successMessage" class="alert alert-success" role="alert">
+    {{ successMessage }}
+  </div>
+
+  <div *ngIf="isLoading" class="loading-indicator">
+    <span class="loading-spinner"></span>
+    Cargando...
+  </div>
+
+  <form [formGroup]="appointmentForm" (ngSubmit)="onSubmit()" class="appointment-form">
+    <!-- Especialidad -->
+    <div class="form-group">
+      <label for="specialtyId">Especialidad</label>
+      <select
+        id="specialtyId"
+        formControlName="specialtyId"
+        class="form-control"
+        [class.is-invalid]="formControls['specialtyId'].invalid && formControls['specialtyId'].touched"
+      >
+        <option value="">Selecciona una especialidad</option>
+        <option *ngFor="let specialty of specialties" [value]="specialty.id">
+          {{specialty.name}}
+        </option>
+      </select>
+      <div class="error-message"
+           *ngIf="formControls['specialtyId'].invalid && formControls['specialtyId'].touched">
+        Por favor selecciona una especialidad
+      </div>
+    </div>
+
+    <!-- Doctor -->
+    <div class="form-group">
+      <label for="doctorId">Doctor</label>
+      <select
+        id="doctorId"
+        formControlName="doctorId"
+        class="form-control"
+        [class.is-invalid]="formControls['doctorId'].invalid && formControls['doctorId'].touched"
+        [disabled]="!formControls['specialtyId'].value"
+      >
+        <option value="">Selecciona un doctor</option>
+        <option *ngFor="let doctor of doctors" [value]="doctor.id">
+          {{getDoctorFullName(doctor)}}
+        </option>
+      </select>
+      <div class="error-message"
+           *ngIf="formControls['doctorId'].invalid && formControls['doctorId'].touched">
+        Por favor selecciona un doctor
+      </div>
+    </div>
+
+    <!-- Fecha -->
+<div class="form-group">
+  <label for="appointmentDate">Fecha</label>
+  <input
+    type="date"
+    id="appointmentDate"
+    formControlName="appointmentDate"
+    class="form-control"
+    [min]="minDate"
+    [class.is-invalid]="formControls['appointmentDate'].invalid && formControls['appointmentDate'].touched"
+    [disabled]="!formControls['doctorId'].value"
+  >
+  <div class="error-message"
+       *ngIf="formControls['appointmentDate'].invalid && formControls['appointmentDate'].touched">
+    Por favor selecciona una fecha válida
+  </div>
+</div>
+
+<!-- Hora -->
+<div class="form-group">
+  <label for="appointmentTime">Hora</label>
+  <select
+    id="appointmentTime"
+    formControlName="appointmentTime"
+    class="form-control"
+    [class.is-invalid]="formControls['appointmentTime'].invalid && formControls['appointmentTime'].touched"
+    [disabled]="!availableTimeSlots.length"
+  >
+    <option value="">Selecciona una hora</option>
+    <option *ngFor="let slot of availableTimeSlots" [value]="slot.startTime">
+      {{slot.startTime}} - {{slot.endTime}}
+    </option>
+  </select>
+  <div class="error-message"
+       *ngIf="formControls['appointmentTime'].invalid && formControls['appointmentTime'].touched">
+    Por favor selecciona una hora disponible
+  </div>
+</div>
+
+    <!-- Motivo de la consulta -->
+    <div class="form-group">
+      <label for="reason">Motivo de la consulta</label>
+      <textarea
+        id="reason"
+        formControlName="reason"
+        class="form-control"
+        rows="4"
+        placeholder="Describe brevemente el motivo de tu consulta"
+        [class.is-invalid]="formControls['reason'].invalid && formControls['reason'].touched"
+      ></textarea>
+      <div class="error-message"
+           *ngIf="formControls['reason'].invalid && formControls['reason'].touched">
+        <span *ngIf="formControls['reason'].errors?.['required']">
+          Por favor describe el motivo de tu consulta
+        </span>
+        <span *ngIf="formControls['reason'].errors?.['minlength']">
+          El motivo debe tener al menos 10 caracteres
+        </span>
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="form-actions">
+      <button
+        type="submit"
+        class="submit-button"
+        [disabled]="appointmentForm.invalid || isLoading">
+        {{ isLoading ? 'Agendando...' : 'Agendar Cita' }}
+      </button>
+
+      <button
+        type="button"
+        class="reset-button"
+        (click)="resetForm()"
+        [disabled]="isLoading">
+        Cancelar
+      </button>
+    </div>
+  </form>
+</div>

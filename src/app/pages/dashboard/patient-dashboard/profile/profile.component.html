@@ -1,0 +1,54 @@
+//src/app/pages/dashboard/patient-dashboard/profile/profile.component.html
+<div class="profile-container"></div>
+  <div class="profile-header">
+    <h2>Mi Perfil</h2>
+    <button class="edit-button" (click)="toggleEditMode()">
+      {{ editMode ? 'Cancelar' : 'Editar Perfil' }}
+    </button>
+  </div>
+
+  <div class="profile-content">
+    <div class="profile-image-section">
+      <div class="profile-image">
+        <img src="/images/avatar.png" alt="Foto de perfil">
+      </div>
+      <button class="change-photo-button" *ngIf="editMode">
+        Cambiar Foto
+      </button>
+    </div>
+
+    <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" class="profile-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="firstName">Nombre</label>
+          <input type="text" id="firstName" formControlName="firstName" class="form-control">
+        </div>
+
+        <div class="form-group">
+          <label for="lastName">Apellido</label>
+          <input type="text" id="lastName" formControlName="lastName" class="form-control">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Correo Electrónico</label>
+        <input type="email" id="email" formControlName="email" class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label for="phone">Teléfono</label>
+        <input type="tel" id="phone" formControlName="phone" class="form-control">
+      </div>
+
+      <div class="form-group">
+        <label for="address">Dirección</label>
+        <input type="text" id="address" formControlName="address" class="form-control">
+      </div>
+
+      <div class="form-actions" *ngIf="editMode">
+        <button type="submit" class="save-button" [disabled]="profileForm.invalid || !profileForm.dirty">
+          Guardar Cambios
+        </button>
+      </div>
+    </form>
+  </div>

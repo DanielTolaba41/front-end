@@ -1,0 +1,65 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <img src="/images/logo.png" alt="Logo" class="logo" (click)="navigateToHome()">
+      <h1>Iniciar Sesión</h1>
+      <p>Bienvenido de nuevo</p>
+    </div>
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <div class="form-group">
+        <label for="email">Correo electrónico</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          placeholder="tu@email.com"
+          [class.error]="loginForm.get('email')?.touched && loginForm.get('email')?.invalid">
+        <div class="error-message" *ngIf="loginForm.get('email')?.touched && loginForm.get('email')?.invalid">
+          Correo electrónico inválido
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <div class="password-input">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            formControlName="password"
+            placeholder="Tu contraseña"
+            [class.error]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid">
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePasswordVisibility()">
+            {{ showPassword ? '🙈' : '👁️' }}
+          </button>
+        </div>
+        <div class="error-message" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.invalid">
+          La contraseña es requerida
+        </div>
+      </div>
+
+      <div class="form-group options">
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="rememberMe">
+          <span>Recordarme</span>
+        </label>
+        <a class="forgot-password" (click)="navigateToForgotPassword()">¿Olvidaste tu contraseña?</a>
+      </div>
+
+      <div class="error-message text-center" *ngIf="loginError">
+        {{ loginError }}
+      </div>
+
+      <button type="submit" class="submit-button" [disabled]="loginForm.invalid">
+        Iniciar Sesión
+      </button>
+    </form>
+
+    <div class="login-footer">
+      <p>¿No tienes una cuenta? <a (click)="navigateToSignup()">Regístrate</a></p>
+    </div>
+  </div>
+</div>

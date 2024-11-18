@@ -1,0 +1,144 @@
+<div class="signup-container">
+  <div class="signup-card">
+    <div class="signup-header">
+      <img src="/images/logo.png" alt="Logo" class="logo" (click)="navigateToHome()">
+      <h1>Crear cuenta</h1>
+      <p>Únete y gestiona tus citas médicas</p>
+    </div>
+
+    <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="signup-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label for="firstName">Nombre</label>
+          <input
+            type="text"
+            id="firstName"
+            formControlName="firstName"
+            placeholder="Tu nombre"
+            [class.error]="signupForm.get('firstName')?.touched && signupForm.get('firstName')?.invalid">
+          <div class="error-message" *ngIf="signupForm.get('firstName')?.touched && signupForm.get('firstName')?.invalid">
+            Nombre es requerido
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="lastName">Apellido</label>
+          <input
+            type="text"
+            id="lastName"
+            formControlName="lastName"
+            placeholder="Tu apellido"
+            [class.error]="signupForm.get('lastName')?.touched && signupForm.get('lastName')?.invalid">
+          <div class="error-message" *ngIf="signupForm.get('lastName')?.touched && signupForm.get('lastName')?.invalid">
+            Apellido es requerido
+          </div>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="email">Correo electrónico</label>
+        <input
+          type="email"
+          id="email"
+          formControlName="email"
+          placeholder="tu@email.com"
+          [class.error]="signupForm.get('email')?.touched && signupForm.get('email')?.invalid">
+        <div class="error-message" *ngIf="signupForm.get('email')?.touched && signupForm.get('email')?.invalid">
+          Correo electrónico inválido
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="phone">Teléfono</label>
+          <input
+            type="tel"
+            id="phone"
+            formControlName="phone"
+            placeholder="Tu número de teléfono"
+            [class.error]="signupForm.get('phone')?.touched && signupForm.get('phone')?.invalid">
+          <div class="error-message" *ngIf="signupForm.get('phone')?.touched && signupForm.get('phone')?.invalid">
+            Teléfono es requerido
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="document">Documento de Identidad</label>
+          <input
+            type="text"
+            id="document"
+            formControlName="document"
+            placeholder="Tu documento de identidad"
+            [class.error]="signupForm.get('document')?.touched && signupForm.get('document')?.invalid">
+          <div class="error-message" *ngIf="signupForm.get('document')?.touched && signupForm.get('document')?.invalid">
+            Documento es requerido
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <div class="password-input">
+          <input
+            [type]="showPassword ? 'text' : 'password'"
+            id="password"
+            formControlName="password"
+            placeholder="Mínimo 8 caracteres"
+            [class.error]="signupForm.get('password')?.touched && signupForm.get('password')?.invalid">
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePasswordVisibility('password')">
+            {{ showPassword ? '🙈' : '👁️' }}
+          </button>
+        </div>
+        <div class="error-message" *ngIf="signupForm.get('password')?.touched && signupForm.get('password')?.invalid">
+          La contraseña debe tener al menos 8 caracteres
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="confirmPassword">Confirmar contraseña</label>
+        <div class="password-input">
+          <input
+            [type]="showConfirmPassword ? 'text' : 'password'"
+            id="confirmPassword"
+            formControlName="confirmPassword"
+            placeholder="Repite tu contraseña"
+            [class.error]="signupForm.get('confirmPassword')?.touched && signupForm.hasError('passwordMismatch')">
+          <button
+            type="button"
+            class="password-toggle"
+            (click)="togglePasswordVisibility('confirmPassword')">
+            {{ showConfirmPassword ? '🙈' : '👁️' }}
+          </button>
+        </div>
+        <div class="error-message" *ngIf="signupForm.get('confirmPassword')?.touched && signupForm.hasError('passwordMismatch')">
+          Las contraseñas no coinciden
+        </div>
+      </div>
+
+      <div class="form-group terms">
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="terms">
+          <span>Acepto los <a href="#">términos y condiciones</a></span>
+        </label>
+        <div class="error-message" *ngIf="signupForm.get('terms')?.touched && signupForm.get('terms')?.invalid">
+          Debes aceptar los términos y condiciones
+        </div>
+      </div>
+      <div class="error-message text-center" *ngIf="signupError">
+        {{ signupError }}
+      </div>
+
+      <button
+  type="submit"
+  class="submit-button"
+  [disabled]="!isFormValid()">
+  {{ isSubmitting ? 'Creando cuenta...' : 'Crear cuenta' }}
+</button>
+    </form>
+
+    <div class="signup-footer">
+      <p>¿Ya tienes una cuenta? <a (click)="navigateToLogin()">Inicia sesión</a></p>
+    </div>
+  </div>
+</div>
