@@ -1,9 +1,9 @@
 // src/app/core/interfaces/auth.interface.ts
 
 export enum UserRole {
-  ADMIN = 'admin',
-  DOCTOR = 'doctor',
-  PATIENT = 'patient'
+  ADMIN = 'ADMIN',
+  DOCTOR = 'DOCTOR',
+  PATIENT = 'PATIENT'
 }
 
 export interface LoginRequest {

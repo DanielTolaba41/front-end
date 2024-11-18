@@ -1,5 +1,4 @@
 // src/app/core/services/appointments.service.ts
-
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
@@ -9,7 +8,7 @@ import { Appointment } from '../../pages/dashboard/interfaces/dashboard-interfac
   providedIn: 'root'
 })
 export class AppointmentsService {
-  private readonly baseUrl = 'https://srfm-back-end.onrender.com'; // Asegúrate de que la URL base sea correcta
+  private readonly baseUrl = 'https://srfm-back-end.onrender.com';
 
   constructor(private http: HttpClient) {}
 
@@ -18,22 +17,25 @@ export class AppointmentsService {
     return new HttpHeaders().set('Authorization', `Bearer ${token}`);
   }
 
-  getAppointments(): Observable<Appointment[]> {
-    return this.http.get<Appointment[]>(this.baseUrl, {
+  // Para cargar todas las citas
+  getAppointments(): Observable<any> {
+    return this.http.get<any>(`${this.baseUrl}/appointments`, {
       headers: this.getAuthHeaders()
     }).pipe(
-      tap(response => console.log('API Response:', response))
+      tap(response => {
+        console.log('API Response:', response);
+      })
     );
   }
 
   getPatientAppointments(patientId: string): Observable<Appointment[]> {
-    return this.http.get<Appointment[]>(`${this.baseUrl}/patient/${patientId}`, {
+    return this.http.get<Appointment[]>(`${this.baseUrl}/appointments/patient/${patientId}`, {
       headers: this.getAuthHeaders()
     });
   }
 
   getDoctorAppointments(doctorId: string): Observable<Appointment[]> {
-    return this.http.get<Appointment[]>(`${this.baseUrl}/doctor/${doctorId}`, {
+    return this.http.get<Appointment[]>(`${this.baseUrl}/appointments/doctor/${doctorId}`, {
       headers: this.getAuthHeaders()
     });
   }

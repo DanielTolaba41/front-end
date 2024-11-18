@@ -1,5 +1,3 @@
-// src/app/pages/dashboard/components/appointments/appointments.component.ts
-
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -35,10 +33,10 @@ export class AppointmentsComponent implements OnInit {
     this.error = null;
 
     this.appointmentsService.getAppointments().subscribe({
-      next: (response: Appointment[]) => {
+      next: (response: any) => {
         console.log('Raw appointments response:', response);
-        this.appointments = response;
-        console.log('Loaded appointments:', this.appointments);
+        this.appointments = this.transformAppointments(response);
+        console.log('Transformed appointments:', this.appointments);
         this.isLoading = false;
       },
       error: (error) => {
@@ -56,7 +54,7 @@ export class AppointmentsComponent implements OnInit {
         id: apt.id || '',
         date: apt.appointmentDate || '',
         time: apt.appointmentTime || '',
-        doctorName: apt.doctor?.user
+        doctorName: apt.doctor?.user 
           ? `Dr. ${apt.doctor.user.name} ${apt.doctor.user.lastName}`
           : 'No asignado',
         specialty: apt.doctor?.specialty?.name || 'No especificada',
