@@ -6,6 +6,13 @@ export enum UserRole {
   PATIENT = 'PATIENT'
 }
 
+export interface User {
+  email: string;
+  role: UserRole;
+  name?: string;
+  lastName?: string;
+}
+
 export interface LoginRequest {
   email: string;
   password: string;
@@ -13,10 +20,7 @@ export interface LoginRequest {
 
 export interface LoginResponse {
   token: string;
-  user: {
-    email: string;
-    role: UserRole;
-  }
+  user: User;
 }
 
 export interface RegisterRequest {
@@ -35,9 +39,4 @@ export interface RegisterResponse {
     email: string;
     role: UserRole;
   }
-}
-
-export interface User {
-  email: string;
-  role: UserRole;
 }

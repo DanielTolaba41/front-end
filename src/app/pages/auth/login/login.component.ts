@@ -1,6 +1,6 @@
 // src/app/pages/auth/login/login.component.ts
 
-import { Component, inject } from '@angular/core';
+import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -12,73 +12,84 @@ import { LoginRequest } from '../../../core/interfaces/auth.interface';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  styleUrls: ['./login.component.css']
 })
 export class LoginComponent {
-  private fb = inject(FormBuilder);
-  private router = inject(Router);
-  private authService = inject(AuthService);
-
-  loginForm = this.fb.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required]],
-    rememberMe: [false]
-  });
-
+  loginForm: FormGroup;
+  isLoading = false;
   showPassword = false;
   loginError = '';
-  isSubmitting = false;
 
-  onSubmit() {
-    if (this.loginForm.valid && !this.isSubmitting) {
-      this.isSubmitting = true;
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService,
+    private router: Router
+  ) {
+    this.loginForm = this.fb.group({
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]],
+      rememberMe: [false]
+    });
+  }
+
+  navigateToHome(): void {
+    this.router.navigate(['/']);
+  }
+
+  navigateToSignup(): void {
+    this.router.navigate(['/auth/signup']);
+  }
+
+  navigateToForgotPassword(): void {
+    this.router.navigate(['/auth/forgot-password']);
+  }
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
+
+  onSubmit(): void {
+    if (this.loginForm.valid && !this.isLoading) {
+      this.isLoading = true;
       this.loginError = '';
 
-      const email = this.loginForm.get('email')?.value || '';
-      const password = this.loginForm.get('password')?.value || '';
+      const { email, password } = this.loginForm.value;
+      const credentials: LoginRequest = { email, password };
 
-      const request: LoginRequest = {
-        email,
-        password
-      };
+      console.log('Intentando login con:', credentials);
 
-      console.log('Intentando login con:', request);
-
-      this.authService.login(request).subscribe({
+      this.authService.login(credentials).subscribe({
         next: (response) => {
           console.log('Login exitoso:', response);
-          if (!response.user || !response.user.role) {
-            this.loginError = 'Error: Información de usuario inválida';
-            return;
-          }
 
-          const role = response.user.role.toLowerCase();
-          console.log('Navegando a dashboard/', role);
+          const userRole = response.user.role.toLowerCase();
+          const dashboardRoute = `/dashboard/${userRole}`;
 
-          // Navegación con promesas
-          this.router.navigate([`/dashboard/${role}`], {
-            replaceUrl: true // Esto reemplaza la entrada actual en el historial
-          }).then(
-            (success) => {
-              console.log('Navegación exitosa:', success);
-              if (!success) {
-                console.error('La navegación no fue exitosa');
-                this.loginError = 'Error al redireccionar: ruta no encontrada';
-              }
-            },
-            (error) => {
-              console.error('Error en navegación:', error);
-              this.loginError = 'Error al redireccionar';
-            }
-          );
+          console.log('Navegando a:', dashboardRoute);
+
+          // Pequeño delay para asegurar que el localStorage se actualice
+          setTimeout(() => {
+            this.router.navigate([dashboardRoute])
+              .then(success => {
+                console.log('Navegación exitosa:', success);
+                if (!success) {
+                  console.error('La navegación no fue exitosa');
+                  this.loginError = 'Error en la redirección';
+                }
+              })
+              .catch(error => {
+                console.error('Error en la navegación:', error);
+                this.loginError = 'Error en la redirección';
+              })
+              .finally(() => {
+                this.isLoading = false;
+              });
+          }, 100);
         },
         error: (error) => {
           console.error('Error en login:', error);
           this.loginError = error.message || 'Error durante el inicio de sesión';
-          this.isSubmitting = false;
-        },
-        complete: () => {
-          this.isSubmitting = false;
+          this.isLoading = false;
         }
       });
     } else {
@@ -86,28 +97,12 @@ export class LoginComponent {
     }
   }
 
-  togglePasswordVisibility() {
-    this.showPassword = !this.showPassword;
-  }
-
-  private markFormGroupTouched(formGroup: FormGroup) {
+  private markFormGroupTouched(formGroup: FormGroup): void {
     Object.values(formGroup.controls).forEach(control => {
       control.markAsTouched();
       if (control instanceof FormGroup) {
         this.markFormGroupTouched(control);
       }
     });
-  }
-
-  navigateToHome() {
-    this.router.navigate(['/']);
-  }
-
-  navigateToSignup() {
-    this.router.navigate(['/auth/signup']);
-  }
-
-  navigateToForgotPassword() {
-    this.router.navigate(['/auth/forgot-password']);
   }
 }

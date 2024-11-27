@@ -1,4 +1,5 @@
 // src/app/pages/dashboard/patient-dashboard/new-appointment/new-appointment.component.ts
+
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
@@ -7,6 +8,7 @@ import { AppointmentService } from '../../../../core/services/new-appointment.se
 import { AppointmentRequest, AppointmentResponse, TimeSlot } from '../../../../core/interfaces/appointment.interface';
 import { Doctor } from '../../../../core/interfaces/doctor.interface';
 import { Specialty } from '../../../../core/interfaces/specialty.interface';
+import { AuthService } from '../../../../core/services/auth.service';
 
 interface AppointmentFormControls {
   specialtyId: FormControl<string | null>;
@@ -39,6 +41,7 @@ export class NewAppointmentComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private appointmentService: AppointmentService,
+    private authService: AuthService,
     private router: Router
   ) {}
 
@@ -53,7 +56,7 @@ export class NewAppointmentComponent implements OnInit {
       doctorId: this.fb.control('', { validators: [Validators.required], nonNullable: true }),
       appointmentDate: this.fb.control('', { validators: [Validators.required], nonNullable: true }),
       appointmentTime: this.fb.control('', { validators: [Validators.required], nonNullable: true }),
-      reason: this.fb.control('', { validators: [Validators.required, Validators.minLength(10)], nonNullable: true })
+      reason: this.fb.control('')
     });
 
     this.setupFormSubscriptions();
@@ -137,7 +140,7 @@ export class NewAppointmentComponent implements OnInit {
   private loadAvailableTimeSlots(doctorId: string, date: string): void {
     this.isLoading = true;
     this.errorMessage = '';
-    const formattedDate = date
+    const formattedDate = date;
     console.log('Requesting time slots for:', { doctorId, date: formattedDate });
 
     this.appointmentService.getAvailableTimeSlots(doctorId, formattedDate).subscribe({
@@ -170,23 +173,43 @@ export class NewAppointmentComponent implements OnInit {
       this.successMessage = '';
 
       const formValue = this.appointmentForm.value;
+      const selectedDate = new Date(formValue.appointmentDate ?? '');
+
+      selectedDate.setMinutes(selectedDate.getMinutes() + selectedDate.getTimezoneOffset());
 
       const appointmentRequest: AppointmentRequest = {
         doctorId: formValue.doctorId ?? '',
-        appointmentDate: new Date(formValue.appointmentDate ?? ''),
+        appointmentDate: selectedDate,
         appointmentTime: formValue.appointmentTime ?? '',
         reason: formValue.reason ?? ''
       };
 
+      console.log('Imprimir para Jhona', appointmentRequest.appointmentDate);
       console.log('Submitting appointment request:', appointmentRequest);
 
       this.appointmentService.createAppointment(appointmentRequest).subscribe({
         next: (response: AppointmentResponse) => {
           console.log('Appointment created successfully:', response);
           this.successMessage = 'La cita se ha agendado correctamente';
-          this.isLoading = false;
+
+          // Obtener el rol del usuario actual
+          const userRole = this.authService.getCurrentUser()?.role.toLowerCase();
+
+          // Construir la ruta correcta
+          const appointmentsRoute = `/dashboard/${userRole}/appointments`;
+
+          // Navegar después de un breve delay para mostrar el mensaje de éxito
           setTimeout(() => {
-            this.router.navigate(['/dashboard/appointments']);
+            this.router.navigate([appointmentsRoute])
+              .then(() => {
+                console.log('Navegación exitosa a:', appointmentsRoute);
+                this.isLoading = false;
+              })
+              .catch(err => {
+                console.error('Error en la navegación:', err);
+                this.errorMessage = 'Error al redireccionar';
+                this.isLoading = false;
+              });
           }, 1500);
         },
         error: (error) => {
@@ -200,10 +223,9 @@ export class NewAppointmentComponent implements OnInit {
     }
   }
 
-  private markFormGroupTouched(formGroup: FormGroup) {
+  private markFormGroupTouched(formGroup: FormGroup): void {
     Object.values(formGroup.controls).forEach(control => {
       control.markAsTouched();
-
       if (control instanceof FormGroup) {
         this.markFormGroupTouched(control);
       }

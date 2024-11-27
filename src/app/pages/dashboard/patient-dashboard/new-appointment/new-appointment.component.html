@@ -98,26 +98,17 @@
 </div>
 
     <!-- Motivo de la consulta -->
-    <div class="form-group">
-      <label for="reason">Motivo de la consulta</label>
-      <textarea
-        id="reason"
-        formControlName="reason"
-        class="form-control"
-        rows="4"
-        placeholder="Describe brevemente el motivo de tu consulta"
-        [class.is-invalid]="formControls['reason'].invalid && formControls['reason'].touched"
-      ></textarea>
-      <div class="error-message"
-           *ngIf="formControls['reason'].invalid && formControls['reason'].touched">
-        <span *ngIf="formControls['reason'].errors?.['required']">
-          Por favor describe el motivo de tu consulta
-        </span>
-        <span *ngIf="formControls['reason'].errors?.['minlength']">
-          El motivo debe tener al menos 10 caracteres
-        </span>
-      </div>
-    </div>
+    <!-- Motivo de la consulta -->
+<div class="form-group">
+  <label for="reason">Motivo de la consulta (opcional)</label>
+  <textarea
+    id="reason"
+    formControlName="reason"
+    class="form-control"
+    rows="4"
+    placeholder="Describe brevemente el motivo de tu consulta (opcional)"
+  ></textarea>
+</div>
 
     <!-- Botones -->
     <div class="form-actions">

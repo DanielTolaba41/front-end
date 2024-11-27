@@ -48,36 +48,83 @@ export class AppointmentsComponent implements OnInit {
   }
 
   private transformAppointments(appointments: any[]): Appointment[] {
-  return appointments.map(apt => {
-    try {
-      return {
-        id: apt.id || '',
-        date: apt.appointmentDate || '',
-        time: apt.appointmentTime || '',
-        doctorName: apt.doctor?.user 
-          ? `Dr. ${apt.doctor.user.name} ${apt.doctor.user.lastName}`
-          : 'No asignado',
-        specialty: apt.doctor?.specialty?.name || 'No especificada',
-        consultingRoom: apt.doctor?.consultingRoom || 'N/A',
-        description: apt.reason || 'Sin descripción',
-        status: apt.status || 'PENDING'
-      };
-    } catch (error) {
-      console.error('Error transforming appointment:', apt, error);
-      return {
-        id: '',
-        date: '',
-        time: '',
-        doctorName: 'Error en datos',
-        specialty: 'No disponible',
-        consultingRoom: 'N/A',
-        description: 'Error en datos',
-        status: 'PENDING'
-      };
-    }
-  });
-}
+    return appointments.map(apt => {
+      try {
+        return {
+          id: apt.id || '',
+          date: apt.appointmentDate || '',
+          time: apt.appointmentTime || '',
+          doctorName: apt.doctor?.user
+            ? `Dr. ${apt.doctor.user.name} ${apt.doctor.user.lastName}`
+            : 'No asignado',
+          specialty: apt.doctor?.specialty?.name || 'No especificada',
+          consultingRoom: apt.doctor?.consultingRoom || 'N/A',
+          description: apt.reason || 'Sin descripción',
+          status: apt.status || 'PENDING',
+          doctor: {
+            id: apt.doctor?.id || '',
+            user: apt.doctor?.user || {},
+            specialty: apt.doctor?.specialty || {},
+            licenseNumber: apt.doctor?.licenseNumber || '',
+            consultingRoom: apt.doctor?.consultingRoom || ''
+          },
+          patient: {
+            id: apt.patient?.id || '',
+            firstName: apt.patient?.user?.name || '',
+            lastName: apt.patient?.user?.lastName || '',
+            email: apt.patient?.user?.email || '',
+            role: apt.patient?.user?.role || '',
+            createdAt: apt.patient?.user?.createdAt || '',
+            updatedAt: apt.patient?.user?.updatedAt || '',
+            isActive: apt.patient?.user?.isActive || false
+          }
+        };
+      } catch (error) {
+        console.error('Error transforming appointment:', apt, error);
+        return {
+          id: '',
+          date: '',
+          time: '',
+          doctorName: 'Error en datos',
+          specialty: 'No disponible',
+          consultingRoom: 'N/A',
+          description: 'Error en datos',
+          status: 'PENDING',
+          doctor: {
+            id: '',
+            user: {},
+            specialty: {},
+            licenseNumber: '',
+            consultingRoom: ''
+          },
+          patient: {
+            id: '',
+            firstName: '',
+            lastName: '',
+            email: '',
+            role: '',
+            createdAt: '',
+            updatedAt: '',
+            isActive: false
+          }
+        };
+      }
+    });
+  }
+getAppointmentCount(date: Date): number {
+  if (!date || !this.appointments) {
+    return 0;
+  }
 
+  const normalizedDate = new Date(date);
+  normalizedDate.setHours(0, 0, 0, 0);
+
+  return this.appointments.filter(appointment => {
+    const appointmentDate = new Date(appointment.date);
+    appointmentDate.setHours(0, 0, 0, 0);
+    return appointmentDate.getTime() === normalizedDate.getTime();
+  }).length;
+}
 
   selectDate(date: Date) {
     console.log('Date selected:', date);

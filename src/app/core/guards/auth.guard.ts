@@ -3,7 +3,6 @@
 import { Injectable } from '@angular/core';
 import {
   CanActivate,
-  CanMatch,
   Route,
   UrlSegment,
   ActivatedRouteSnapshot,
@@ -17,7 +16,7 @@ import { UserRole } from '../interfaces/auth.interface';
 @Injectable({
   providedIn: 'root'
 })
-export class AuthGuard implements CanActivate, CanMatch {
+export class AuthGuard implements CanActivate {
   constructor(
     private authService: AuthService,
     private router: Router
@@ -27,18 +26,9 @@ export class AuthGuard implements CanActivate, CanMatch {
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
   ): Observable<boolean> | Promise<boolean> | boolean {
-    return this.checkAccess(route);
-  }
-
-  canMatch(
-    route: Route,
-    segments: UrlSegment[]
-  ): Observable<boolean> | Promise<boolean> | boolean {
-    return this.checkAccess(route);
-  }
-
-  private checkAccess(route: Route | ActivatedRouteSnapshot): boolean {
+    // Si no está logueado, redirigir a login
     if (!this.authService.isLoggedIn()) {
+      console.log('Usuario no logueado, redirigiendo a login');
       this.router.navigate(['/auth/login']);
       return false;
     }
@@ -46,25 +36,21 @@ export class AuthGuard implements CanActivate, CanMatch {
     const user = this.authService.getCurrentUser();
     const requiredRole = route.data?.['role'] as UserRole;
 
-    if (requiredRole && user?.role !== requiredRole) {
-      const defaultRoute = this.getDefaultRouteForRole(user?.role);
-      this.router.navigate([defaultRoute]);
+    // Si no hay rol requerido o el usuario no tiene rol, permitir acceso
+    if (!requiredRole || !user?.role) {
+      return true;
+    }
+
+    // Comparar roles ignorando mayúsculas/minúsculas
+    const userRoleUpper = user.role.toUpperCase();
+    const requiredRoleUpper = requiredRole.toUpperCase();
+
+    if (userRoleUpper !== requiredRoleUpper) {
+      console.log('Rol no coincide, redirigiendo al dashboard correspondiente');
+      this.router.navigate([`/dashboard/${user.role.toLowerCase()}`]);
       return false;
     }
 
     return true;
-  }
-
-  private getDefaultRouteForRole(role?: UserRole): string {
-    switch (role) {
-      case UserRole.ADMIN:
-        return '/dashboard/admin';
-      case UserRole.DOCTOR:
-        return '/dashboard/doctor';
-      case UserRole.PATIENT:
-        return '/dashboard/patient';
-      default:
-        return '/auth/login';
-    }
   }
 }

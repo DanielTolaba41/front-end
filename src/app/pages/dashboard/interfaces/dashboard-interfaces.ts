@@ -1,6 +1,26 @@
 // src/app/pages/dashboard/interfaces/dashboard-interfaces.ts
 
-// Interfaz para las citas transformadas (vista)
+import { Doctor } from "../../../core/interfaces/doctor.interface";
+import { User } from "../../../core/interfaces/user.interfaces";
+
+export enum AppointmentStatus {
+  PENDING = 'PENDING',
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED',
+  CONFIRMED = 'CONFIRMED'
+}
+
+export interface DashboardUser {
+  id: string;
+  name: string;
+  lastName: string;
+  email: string;
+  phone?: string;
+  profileImage?: string;
+  specialty?: string;
+  consultingRoom?: string;
+}
+
 export interface Appointment {
   id: string;
   date: string;
@@ -8,11 +28,13 @@ export interface Appointment {
   doctorName: string;
   specialty: string;
   consultingRoom: string;
+  doctor: Doctor;
+  patient: User;
   description: string;
-  status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
+  status: AppointmentStatus;
+  patientName?: string;
 }
 
-// Interfaz para la respuesta del backend
 export interface ApiAppointment {
   id: string;
   appointmentDate: string;
@@ -32,13 +54,4 @@ export interface ApiAppointment {
       lastName: string;
     };
   };
-}
-
-export interface User {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  phone: string;
-  profileImage: string;
 }

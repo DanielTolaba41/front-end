@@ -30,14 +30,16 @@
       <div class="weeks">
         <div class="week" *ngFor="let week of weeks">
           <div class="day"
-               *ngFor="let date of week"
-               [class.today]="isToday(date)"
-               [class.selected]="selectedDate?.toDateString() === date.toDateString()"
-               [class.other-month]="!isSelectedMonth(date)"
-               (click)="selectDate(date)">
-            <span class="date-number">{{ date | date:'d' }}</span>
-          </div>
-        </div>
+     *ngFor="let date of week"
+     [class.today]="isToday(date)"
+     [class.selected]="selectedDate?.toDateString() === date.toDateString()"
+     [class.other-month]="!isSelectedMonth(date)"
+     (click)="selectDate(date)">
+  <span class="date-number">{{ date | date:'d' }}</span>
+  <div class="appointment-indicator" *ngIf="getAppointmentCount(date) > 0">
+    {{ getAppointmentCount(date) }}
+  </div>
+</div>
       </div>
     </div>
   </div>

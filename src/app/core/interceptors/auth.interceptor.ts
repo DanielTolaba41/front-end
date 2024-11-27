@@ -1,6 +1,6 @@
 // src/app/core/interceptors/auth.interceptor.ts
 
-import { HttpHandlerFn, HttpInterceptorFn, HttpRequest } from '@angular/common/http';
+import { HttpHandlerFn, HttpInterceptorFn, HttpRequest, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { AuthService } from '../services/auth.service';
 import { catchError, throwError } from 'rxjs';
@@ -14,19 +14,29 @@ export const authInterceptor: HttpInterceptorFn = (
   const router = inject(Router);
   const token = authService.getToken();
 
-  if (token) {
+  // Verificar si la ruta es pública (login/registro)
+  const isPublicRoute = req.url.includes('/auth/login') || req.url.includes('/auth/register');
+
+  if (token && !isPublicRoute) {
     req = req.clone({
       setHeaders: {
-        Authorization: `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json'
       }
     });
   }
 
   return next(req).pipe(
-    catchError(error => {
+    catchError((error: HttpErrorResponse) => {
       if (error.status === 401) {
+        console.log('Token expirado o inválido');
         authService.logout();
         router.navigate(['/auth/login']);
+      }
+      // Manejar otros errores de autenticación
+      if (error.status === 403) {
+        console.log('Acceso prohibido');
+        router.navigate(['/dashboard']);
       }
       return throwError(() => error);
     })
