@@ -1,11 +1,12 @@
 //src/pages/dashboard/doctor
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AppointmentsService } from '../../../../core/services/appointments.service';
 import { AppointmentPatient, AppointmentStatus } from '../../../../core/interfaces/appointment.interface';
 import { PatientService } from '../../../../core/services/patient.service';
 import { Patient } from '../../../../core/interfaces/user.interfaces';
+import { interval, startWith, Subscription, switchMap } from 'rxjs';
 
 
 @Component({
@@ -15,7 +16,7 @@ import { Patient } from '../../../../core/interfaces/user.interfaces';
   templateUrl: './appointments-control.component.html',
   styleUrls: ['./appointments-control.component.css']
 })
-export class AppointmentsControlComponent {
+export class AppointmentsControlComponent implements OnInit, OnDestroy {
   selectedDate: Date = new Date();
   filterStatus: string = 'todos';
   weeks: Date[][] = [];
@@ -24,7 +25,9 @@ export class AppointmentsControlComponent {
   appointments: AppointmentPatient[] = [];
   AppointmentStatus = AppointmentStatus;
   private patientCache = new Map<string, Patient>();
-  private intervalId: any;
+
+  private pollingSubscription?: Subscription;
+  private readonly POLLING_INTERVAL = 30000; 
 
   constructor(
     private appointmentsService: AppointmentsService,
@@ -32,8 +35,6 @@ export class AppointmentsControlComponent {
   ) { }
 
   ngOnInit() {
-    console.log('Component initialized');
-    this.loadAppointments();
     this.startPolling();
   }
 
@@ -41,20 +42,75 @@ export class AppointmentsControlComponent {
     this.stopPolling();
   }
 
-  loadAppointments() {
-    this.isLoading = true;
+  private startPolling() {
+
+    this.pollingSubscription = interval(this.POLLING_INTERVAL)
+      .pipe(
+        startWith(0), // Comienza inmediatamente
+        switchMap(() => {
+          console.log('Polling appointments...');
+          return new Promise<void>((resolve) => {
+            this.loadAppointments(false);
+            resolve();
+          });
+        })
+      )
+      .subscribe();
+  }
+
+  private stopPolling() {
+    if (this.pollingSubscription) {
+      this.pollingSubscription.unsubscribe();
+    }
+  }
+
+
+  loadAppointments(showLoading: boolean = true) {
+    if (showLoading) {
+      this.isLoading = true;
+    }
     this.error = null;
 
     this.appointmentsService.getAppointments().subscribe({
       next: async (response: any) => {
-        this.appointments = await this.transformAppointments(response);
-        this.isLoading = false;
+        const newAppointments = await this.transformAppointments(response);
+        
+        // Comparar con las citas actuales para detectar cambios
+        if (this.hasAppointmentsChanged(newAppointments)) {
+          console.log('Appointments updated!');
+          this.appointments = newAppointments;
+        }
+        
+        if (showLoading) {
+          this.isLoading = false;
+        }
       },
       error: (error) => {
         this.error = 'Error al cargar las citas';
-        this.isLoading = false;
+        if (showLoading) {
+          this.isLoading = false;
+        }
         console.error('Error loading appointments:', error);
       }
+    });
+  }
+
+  private hasAppointmentsChanged(newAppointments: AppointmentPatient[]): boolean {
+    if (this.appointments.length !== newAppointments.length) {
+      return true;
+    }
+
+    // Comparar cada cita para detectar cambios en el estado o detalles
+    return newAppointments.some(newAppointment => {
+      const existingAppointment = this.appointments.find(a => a.id === newAppointment.id);
+      if (!existingAppointment) return true;
+
+      return (
+        existingAppointment.status !== newAppointment.status ||
+        existingAppointment.time !== newAppointment.time ||
+        existingAppointment.date !== newAppointment.date ||
+        existingAppointment.patientName !== newAppointment.patientName
+      );
     });
   }
 
@@ -117,12 +173,14 @@ export class AppointmentsControlComponent {
   }
 
   onDateChange(event: Event): void {
-    this.loadAppointments()
     const inputDate = (event.target as HTMLInputElement).value;
     const [year, month, day] = inputDate.split('-').map(Number);
     const localDate = new Date(year, month - 1, day);
     console.log('Fecha seleccionada:', localDate);
     this.selectedDate = localDate;
+
+    this.stopPolling();
+    this.startPolling();
   }
 
   private adjustToLocalDate = (date: string) => {
@@ -163,17 +221,4 @@ export class AppointmentsControlComponent {
       status: 'PENDING',
     };
   }
-
-  private startPolling() {
-    this.intervalId = setInterval(() => {
-      this.loadAppointments();
-    }, 30000);
-  }
-
-  private stopPolling() {
-    if (this.intervalId) {
-      clearInterval(this.intervalId);
-    }
-  }
-
 }
