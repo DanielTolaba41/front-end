@@ -46,7 +46,7 @@ export class RescheduleModalComponent implements OnInit {
   }
 
   private loadAvailableTimeSlots() {
-    if (this.isLoading) return; // Prevenir múltiples llamadas mientras carga
+    if (this.isLoading) return;
 
     this.isLoading = true;
     this.errorMessage = '';
@@ -97,13 +97,13 @@ export class RescheduleModalComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.isSubmitting || !this.rescheduleForm.valid) return; // Prevenir múltiples envíos
+    if (this.isSubmitting || !this.rescheduleForm.valid) return;
 
     this.isSubmitting = true;
     this.errorMessage = '';
     const selectedTime = this.rescheduleForm.get('selectedTime')?.value;
 
-    // Verificar nuevamente que el horario esté disponible antes de cerrar el modal
+    // Verificar disponibilidad antes de intentar agendar
     this.appointmentService.getAvailableTimeSlots(
       this.data.doctorId,
       this.data.originalDate
@@ -114,14 +114,18 @@ export class RescheduleModalComponent implements OnInit {
     ).subscribe({
       next: (slots) => {
         const isStillAvailable = slots.some(slot => slot.startTime === selectedTime);
+
         if (isStillAvailable) {
+          // El horario sigue disponible, cerrar el modal con el resultado
           this.dialogRef.close({
             rescheduled: true,
             time: selectedTime
           });
         } else {
+          // El horario ya no está disponible, recargar slots y mostrar mensaje
           this.errorMessage = 'El horario seleccionado ya no está disponible. Por favor, seleccione otro horario.';
           this.loadAvailableTimeSlots(); // Recargar horarios disponibles
+          this.rescheduleForm.get('selectedTime')?.setValue(''); // Limpiar selección
         }
       },
       error: (error) => {

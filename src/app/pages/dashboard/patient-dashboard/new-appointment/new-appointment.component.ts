@@ -165,6 +165,20 @@ export class NewAppointmentComponent implements OnInit {
           `${selectedDoctor.user.name} ${selectedDoctor.user.lastName}` : ''
       }
     });
+
+    // Manejar el resultado del modal
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.rescheduled) {
+        // Crear nueva solicitud con el horario seleccionado
+        const newRequest = {
+          ...originalRequest,
+          appointmentTime: result.time
+        };
+        this.createAppointment(newRequest); // Intentar crear la cita nuevamente
+      } else {
+        this.isLoading = false; // Si el usuario canceló, detener la carga
+      }
+    });
   }
 
   private loadSpecialties(): void {
