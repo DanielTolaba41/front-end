@@ -1,5 +1,4 @@
 // src/app/pages/dashboard/patient-dashboard/new-appointment/reschedule-modal/reschedule-modal.component.ts
-
 import { Component, Inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -18,17 +17,14 @@ export interface RescheduleModalData {
 @Component({
   selector: 'app-reschedule-modal',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule,
-    MatDialogModule
-  ],
+  imports: [CommonModule, ReactiveFormsModule, MatDialogModule],
   templateUrl: './reschedule-modal.component.html',
   styleUrls: ['./reschedule-modal.component.css']
 })
 export class RescheduleModalComponent implements OnInit {
   rescheduleForm: FormGroup;
   availableTimeSlots: TimeSlot[] = [];
+  nearestTimeSlots: TimeSlot[] = [];
   isLoading = false;
 
   constructor(
@@ -56,6 +52,7 @@ export class RescheduleModalComponent implements OnInit {
         this.availableTimeSlots = slots.sort((a, b) =>
           a.startTime.localeCompare(b.startTime)
         );
+        this.findNearestTimeSlots();
         this.isLoading = false;
       },
       error: (error) => {
@@ -63,6 +60,39 @@ export class RescheduleModalComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  private findNearestTimeSlots() {
+    const originalTime = this.data.originalTime;
+
+    // Dividir los slots en anteriores y posteriores
+    const { before, after } = this.availableTimeSlots.reduce(
+      (acc, slot) => {
+        if (slot.startTime < originalTime) {
+          acc.before.push(slot);
+        } else if (slot.startTime > originalTime) {
+          acc.after.push(slot);
+        }
+        return acc;
+      },
+      { before: [] as TimeSlot[], after: [] as TimeSlot[] }
+    );
+
+    // Obtener los 2 horarios más cercanos antes
+    const nearestBefore = before.slice(-2);
+
+    // Obtener los 2 horarios más cercanos después
+    const nearestAfter = after.slice(0, 2);
+
+    // Combinar los resultados
+    this.nearestTimeSlots = [...nearestBefore, ...nearestAfter];
+
+    // Si no hay slots disponibles, nearestTimeSlots estará vacío
+    console.log('Slots cercanos encontrados:', this.nearestTimeSlots);
+  }
+
+  hasAvailableSlots(): boolean {
+    return this.nearestTimeSlots.length > 0;
   }
 
   onSubmit() {
@@ -77,5 +107,12 @@ export class RescheduleModalComponent implements OnInit {
 
   onCancel() {
     this.dialogRef.close({ rescheduled: false });
+  }
+
+  // Helper para mostrar si un slot es anterior o posterior
+  getSlotDescription(slot: TimeSlot): string {
+    return slot.startTime < this.data.originalTime ?
+      'Horario anterior disponible' :
+      'Horario posterior disponible';
   }
 }

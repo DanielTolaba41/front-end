@@ -13,26 +13,27 @@
 
     <p>Ya ha sido reservada por otro paciente.</p>
 
-    <div *ngIf="availableTimeSlots.length > 0" class="alternative-slots">
-      <h3>Horarios alternativos disponibles:</h3>
+    <div *ngIf="hasAvailableSlots()" class="alternative-slots">
+      <h3>Horarios alternativos disponibles más cercanos:</h3>
       <form [formGroup]="rescheduleForm">
         <div class="time-slots">
-          <div *ngFor="let slot of availableTimeSlots" class="slot-option">
+          <div *ngFor="let slot of nearestTimeSlots" class="slot-option">
             <input type="radio"
                    [id]="slot.startTime"
                    formControlName="selectedTime"
                    [value]="slot.startTime">
             <label [for]="slot.startTime">
-              {{slot.startTime}} - {{slot.endTime}}
+              <span class="slot-time">{{slot.startTime}} - {{slot.endTime}}</span>
+              <span class="slot-description">{{getSlotDescription(slot)}}</span>
             </label>
           </div>
         </div>
       </form>
     </div>
 
-    <div *ngIf="availableTimeSlots.length === 0" class="no-slots">
+    <div *ngIf="!hasAvailableSlots()" class="no-slots">
       <p>No hay horarios disponibles para esta fecha.</p>
-      <p>Por favor, selecciona otra fecha.</p>
+      <p>Por favor, selecciona otra fecha para ver la disponibilidad.</p>
     </div>
   </div>
 
@@ -43,7 +44,7 @@
 
   <div class="modal-actions">
     <button class="submit-button"
-            *ngIf="availableTimeSlots.length > 0"
+            *ngIf="hasAvailableSlots()"
             [disabled]="!rescheduleForm.valid || isLoading"
             (click)="onSubmit()">
       Agendar en nuevo horario

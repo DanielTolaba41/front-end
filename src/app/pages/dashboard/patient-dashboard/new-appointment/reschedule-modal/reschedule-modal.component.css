@@ -156,11 +156,86 @@ h2 {
   margin: 1rem 0;
   color: #991b1b;
 }
+.slot-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  background: #f9fafb;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+  border: 1px solid #e5e7eb;
+}
+
+.slot-option:hover {
+  background: #f3f4f6;
+  border-color: var(--primary-color);
+}
+
+.slot-option label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  cursor: pointer;
+  flex: 1;
+}
+
+.slot-time {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.slot-description {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.time-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.alternative-slots h3 {
+  color: #1f2937;
+  font-size: 1.125rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+/* Ajustes para el radio button */
+.slot-option input[type="radio"] {
+  margin-top: 0.25rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  border: 2px solid #d1d5db;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.slot-option input[type="radio"]:checked {
+  border-color: var(--primary-color);
+  background-color: var(--primary-color);
+}
+
 
 /* Estilos responsivos */
 @media (max-width: 640px) {
   :host {
     padding: 0.5rem;
+  }
+
+  .slot-option {
+    padding: 0.875rem;
+  }
+
+  .slot-time {
+    font-size: 0.9375rem;
+  }
+
+  .slot-description {
+    font-size: 0.8125rem;
   }
 
   .reschedule-modal {
