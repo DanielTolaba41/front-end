@@ -220,7 +220,6 @@ export class AppointmentsControlComponent implements OnInit, OnDestroy {
           
           console.log('Name properties:', {
             name: patient.user.name,
-            firstName: patient.user.firstName,
             lastName: patient.user.lastName
           });
           
@@ -244,12 +243,11 @@ export class AppointmentsControlComponent implements OnInit, OnDestroy {
     }
   
     // Verificar si existe name o firstName
-    const name = patient.user.firstName || patient.user.firstName || '';
+    const name = patient.user.name || '';
     const lastName = patient.user.lastName || '';
   
     console.log('Name components:', {
-      name: patient.user.firstName,
-      firstName: patient.user.firstName,
+      name: patient.user.name,
       lastName: patient.user.lastName
     });
   
