@@ -4,7 +4,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AppointmentsService } from '../../../../core/services/appointments.service';
 import { AppointmentPatient, AppointmentStatus } from '../../../../core/interfaces/appointment.interface';
-import { DoctorService } from '../../../../core/services/doctor.service';
+import { PatientService } from '../../../../core/services/patient.service';
+import { Patient } from '../../../../core/interfaces/user.interfaces';
 
 
 @Component({
@@ -22,86 +23,62 @@ export class AppointmentsControlComponent {
   error: string | null = null;
   appointments: AppointmentPatient[] = [];
   AppointmentStatus = AppointmentStatus;
+  private patientCache = new Map<string, Patient>();
 
   constructor(
     private appointmentsService: AppointmentsService,
-    private doctorService: DoctorService
+    private patientService: PatientService
   ) { }
 
   ngOnInit() {
     console.log('Component initialized');
-    //this.generateCalendar();
     this.loadAppointments();
   }
 
   loadAppointments() {
     this.isLoading = true;
     this.error = null;
-    console.log('appointment');
+
     this.appointmentsService.getAppointments().subscribe({
-      next: (response: any) => {
-        this.appointments = this.transformAppointments(response);
+      next: async (response: any) => {
+        this.appointments = await this.transformAppointments(response);
         this.isLoading = false;
       },
       error: (error) => {
         this.error = 'Error al cargar las citas';
         this.isLoading = false;
+        console.error('Error loading appointments:', error);
       }
     });
   }
-  private transformAppointments(appointments: any[]): AppointmentPatient[] {
-    console.log('appointment:', appointments.pop() );
-    return appointments.map((apt: any) => {
-      try {
-        return {
-          id: apt.id || '',
-          date: apt.appointmentDate || '',
-          time: apt.appointmentTime || '',
-          patientName: this.getPatient(apt.patient.id),
-          description: apt.reason || 'Sin descripción',
-          status: apt.status || 'PENDING',
-          doctor: {
-            id: apt.doctor?.id || '',
-            user: apt.doctor?.user || {},
-            specialty: apt.doctor?.specialty || {},
-          },
-          patient: {
-            id: apt.patient?.id || '',
-            firstName: apt.patient?.user?.firstName || '',
-            lastName: apt.patient?.user?.lastName || '',
-            email: apt.patient?.user?.email || '',
-          }
-        };
-      } catch (error) {
-        console.error('Error transforming appointment:', apt, error);
-        return {
-          id: '',
-          date: '',
-          time: '',
-          patientName: 'Error en datos',
-          description: 'Error en datos',
-          status: 'PENDING',
-          doctor: {
-            id: '',
-            user: {},
-            specialty: {},
-            licenseNumber: '',
-            consultingRoom: ''
-          },
-          patient: {
-            id: '',
-            firstName: '',
-            lastName: '',
-            email: '',
-            role: '',
-            createdAt: '',
-            updatedAt: '',
-            isActive: false
-          }
-        };
-      }
-    });
+
+  private async transformAppointments(appointments: any[]): Promise<AppointmentPatient[]> {
+    try {
+      const transformedAppointments = await Promise.all(appointments.map(async (apt: any) => {
+        try {
+          const patientName = await this.getPatient(apt.patient.id);
+          
+          return {
+            id: apt.id || '',
+            date: apt.appointmentDate || '',
+            time: apt.appointmentTime || '',
+            patientName,
+            description: apt.reason || 'Sin descripción',
+            status: apt.status || 'PENDING',
+          };
+        } catch (error) {
+          console.error('Error transforming appointment:', apt, error);
+          return this.getDefaultAppointment();
+        }
+      }));
+
+      return transformedAppointments;
+    } catch (error) {
+      console.error('Error in transformAppointments:', error);
+      return [];
+    }
   }
+    
 
   changeStatus(appointment: AppointmentPatient, newStatus: AppointmentStatus ): void {
     appointment.status = newStatus;
@@ -129,10 +106,6 @@ export class AppointmentsControlComponent {
     return filtered;
   }
 
-
-  private getPatient(id: string): string{
-    return 'Ana Salvatierra'
-  }
   getStatusClass(status: string): string {
     return `status-${status}`;
   }
@@ -150,5 +123,38 @@ export class AppointmentsControlComponent {
     localDate.setMinutes(localDate.getMinutes() + localDate.getTimezoneOffset());
     return localDate;
   };
+
+
+  private getPatient(id: string): Promise<string> {
+    return new Promise((resolve) => {
+      if (this.patientCache.has(id)) {
+        const cachedPatient = this.patientCache.get(id)!;
+        resolve(`${cachedPatient.user.firstName} ${cachedPatient.user.lastName}`);
+        return;
+      }
+
+      this.patientService.getDataPatient(id).subscribe({
+        next: (patient) => {
+          this.patientCache.set(id, patient);
+          resolve(`${patient.user.name} ${patient.user.lastName}`);
+        },
+        error: (error) => {
+          console.error('Error fetching patient data:', error);
+          resolve('Error al cargar paciente');
+        }
+      });
+    });
+  }
+
+  private getDefaultAppointment(): AppointmentPatient {
+    return {
+      id: '',
+      date: '',
+      time: '',
+      patientName: 'Error en datos',
+      description: 'Error en datos',
+      status: 'PENDING',
+    };
+  }
 
 }

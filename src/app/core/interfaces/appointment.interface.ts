@@ -18,7 +18,7 @@ export interface AppointmentResponse {
   doctor: {
     id: string;
     user: {
-      firstName: string;
+      name: string;
       lastName: string;
       email: string;
     };
