@@ -1,16 +1,13 @@
+<!-- doctor-dashboard.component.html -->
 <div class="dashboard-container">
   <div class="dashboard-sidebar" [class.sidebar-open]="sidebarOpen">
-    <div class="nav-item" routerLink="/dashboard/doctor" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-      <span class="nav-icon">📊</span> Panel Principal
-    </div>
-    <div class="nav-item" routerLink="/dashboard/doctor/appointments" routerLinkActive="active">
-      <span class="nav-icon">📅</span> Mis Citas
-    </div>
-    <div class="nav-item" routerLink="/dashboard/doctor/appointments-control" routerLinkActive="active">
-      <span class="nav-icon">📋</span> Control de Citas
-    </div>
-    <div class="nav-item" routerLink="/dashboard/doctor/profile" routerLinkActive="active">
-      <span class="nav-icon">👤</span> Mi Perfil
+    <div class="nav-options">
+      <div class="nav-item" routerLink="/dashboard/doctor/appointments-control" routerLinkActive="active">
+        <span class="nav-icon">📋</span> Control de Citas
+      </div>
+      <div class="nav-item" routerLink="/dashboard/doctor/profile" routerLinkActive="active">
+        <span class="nav-icon">👤</span> Mi Perfil
+      </div>
     </div>
 
     <div class="sidebar-footer">

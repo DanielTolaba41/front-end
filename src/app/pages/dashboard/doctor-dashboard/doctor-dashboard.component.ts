@@ -1,5 +1,4 @@
-// src/app/pages/dashboard/doctor-dashboard/doctor-dashboard.component.ts
-
+// doctor-dashboard.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
@@ -42,19 +41,26 @@ export class DoctorDashboardComponent implements OnInit {
   ngOnInit() {
     const currentUser = this.authService.getCurrentUser();
     if (currentUser?.email) {
-      this.doctorService.getDoctorByEmail(currentUser.email).subscribe({
-        next: (data) => {
-          console.log('Doctor data:', data);
-          this.doctorInfo = data;
-          this.isLoading = false;
-        },
-        error: (err) => {
-          console.error('Error loading doctor info:', err);
-          this.error = 'Error al cargar la información';
-          this.isLoading = false;
-        }
-      });
+      this.loadDoctorInfo(currentUser.email);
     }
+  }
+
+  private loadDoctorInfo(email: string) {
+    this.doctorService.getDoctorByEmail(email).subscribe({
+      next: (data) => {
+        this.doctorInfo = data;
+        this.isLoading = false;
+        // Redirigir a appointments-control si estamos en la ruta base
+        if (this.router.url === '/dashboard/doctor') {
+          this.router.navigate(['/dashboard/doctor/appointments-control']);
+        }
+      },
+      error: (err) => {
+        console.error('Error loading doctor info:', err);
+        this.error = 'Error al cargar la información';
+        this.isLoading = false;
+      }
+    });
   }
 
   toggleSidebar(): void {
@@ -67,14 +73,5 @@ export class DoctorDashboardComponent implements OnInit {
 
   logout(): void {
     this.authService.logout();
-  }
-
-  getCurrentDate(): string {
-    return new Date().toLocaleDateString('es-ES', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
   }
 }
