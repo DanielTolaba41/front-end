@@ -196,20 +196,36 @@ export class AppointmentsControlComponent implements OnInit, OnDestroy {
 
   private getPatient(id: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      // Verificar el caché primero
       if (this.patientCache.has(id)) {
         const cachedPatient = this.patientCache.get(id)!;
+        console.log('Patient data from cache:', cachedPatient);
         resolve(this.formatPatientName(cachedPatient));
         return;
       }
   
-      // Si no está en caché, obtener del servicio
       this.patientService.getDataPatient(id).subscribe({
         next: (patient) => {
+          // Imprimir la respuesta completa del servicio
+          console.log('Raw patient data from service:', patient);
+          
+          // Verificar la estructura completa del objeto user
+          console.log('User object:', patient.user);
+          
           // Guardar en caché
           this.patientCache.set(id, patient);
-          // Formatear y devolver el nombre completo
-          resolve(this.formatPatientName(patient));
+          
+          // Verificamos si name existe en lugar de firstName
+          const name = patient.user.name || patient.user.firstName || '';
+          const lastName = patient.user.lastName || '';
+          
+          console.log('Name properties:', {
+            name: patient.user.name,
+            firstName: patient.user.firstName,
+            lastName: patient.user.lastName
+          });
+          
+          const fullName = `${name} ${lastName}`.trim();
+          resolve(fullName);
         },
         error: (error) => {
           console.error('Error fetching patient data:', error);
@@ -220,18 +236,24 @@ export class AppointmentsControlComponent implements OnInit, OnDestroy {
   }
 
   private formatPatientName(patient: Patient): string {
-    // Verificar que existan tanto el objeto user como sus propiedades
+    // Imprimir el objeto patient completo
+    console.log('Full patient object:', patient);
+    
     if (!patient?.user) {
       return 'Nombre no disponible';
     }
   
-    const firstName = patient.user.firstName || '';
+    // Verificar si existe name o firstName
+    const name = patient.user.firstName || patient.user.firstName || '';
     const lastName = patient.user.lastName || '';
   
-    // Log para debugging
-    console.log('Formatting name:', { firstName, lastName, patient });
+    console.log('Name components:', {
+      name: patient.user.firstName,
+      firstName: patient.user.firstName,
+      lastName: patient.user.lastName
+    });
   
-    return firstName && lastName ? `${firstName} ${lastName}`.trim() : 'Nombre no disponible';
+    return name && lastName ? `${name} ${lastName}`.trim() : lastName || 'Nombre no disponible';
   }
 
   private getDefaultAppointment(): AppointmentPatient {
