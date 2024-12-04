@@ -78,13 +78,7 @@ export const routes: Routes = [
           {
             path: '',
             pathMatch: 'full',
-            redirectTo: 'appointments'
-          },
-          {
-            path: 'appointments',
-            loadComponent: () =>
-              import('./pages/dashboard/doctor-dashboard/appointments/doctor-appointments.component')
-            .then(m => m.DoctorAppointmentsComponent)
+            redirectTo: 'appointments-control'  // Cambiado de 'appointments' a 'appointments-control'
           },
           {
             path: 'appointments-control',
