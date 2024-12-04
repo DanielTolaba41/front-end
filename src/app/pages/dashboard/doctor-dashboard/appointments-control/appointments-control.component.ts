@@ -138,9 +138,9 @@ export class AppointmentsControlComponent {
   }
 
   onDateChange(event: Event): void {
-    const inputDate = (event.target as HTMLInputElement).value; // Valor en formato YYYY-MM-DD
-    const [year, month, day] = inputDate.split('-').map(Number); // Divide el valor y lo convierte a números
-    const localDate = new Date(year, month - 1, day); // Crea la fecha manualmente en hora local (sin desfase)
+    const inputDate = (event.target as HTMLInputElement).value;
+    const [year, month, day] = inputDate.split('-').map(Number);
+    const localDate = new Date(year, month - 1, day);
     console.log('Fecha seleccionada:', localDate);
     this.selectedDate = localDate;
   }
