@@ -5,6 +5,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { AppointmentService } from '../../../../../core/services/new-appointment.service';
 import { TimeSlot } from '../../../../../core/interfaces/appointment.interface';
+import { finalize } from 'rxjs/operators';
 
 export interface RescheduleModalData {
   doctorId: string;
@@ -26,6 +27,8 @@ export class RescheduleModalComponent implements OnInit {
   availableTimeSlots: TimeSlot[] = [];
   nearestTimeSlots: TimeSlot[] = [];
   isLoading = false;
+  errorMessage = '';
+  isSubmitting = false;
 
   constructor(
     private fb: FormBuilder,
@@ -43,21 +46,28 @@ export class RescheduleModalComponent implements OnInit {
   }
 
   private loadAvailableTimeSlots() {
+    if (this.isLoading) return; // Prevenir múltiples llamadas mientras carga
+
     this.isLoading = true;
+    this.errorMessage = '';
+
     this.appointmentService.getAvailableTimeSlots(
       this.data.doctorId,
       this.data.originalDate
+    ).pipe(
+      finalize(() => {
+        this.isLoading = false;
+      })
     ).subscribe({
       next: (slots) => {
         this.availableTimeSlots = slots.sort((a, b) =>
           a.startTime.localeCompare(b.startTime)
         );
         this.findNearestTimeSlots();
-        this.isLoading = false;
       },
       error: (error) => {
         console.error('Error loading time slots:', error);
-        this.isLoading = false;
+        this.errorMessage = 'No se pudieron cargar los horarios disponibles';
       }
     });
   }
@@ -65,7 +75,6 @@ export class RescheduleModalComponent implements OnInit {
   private findNearestTimeSlots() {
     const originalTime = this.data.originalTime;
 
-    // Dividir los slots en anteriores y posteriores
     const { before, after } = this.availableTimeSlots.reduce(
       (acc, slot) => {
         if (slot.startTime < originalTime) {
@@ -78,17 +87,9 @@ export class RescheduleModalComponent implements OnInit {
       { before: [] as TimeSlot[], after: [] as TimeSlot[] }
     );
 
-    // Obtener los 2 horarios más cercanos antes
     const nearestBefore = before.slice(-2);
-
-    // Obtener los 2 horarios más cercanos después
     const nearestAfter = after.slice(0, 2);
-
-    // Combinar los resultados
     this.nearestTimeSlots = [...nearestBefore, ...nearestAfter];
-
-    // Si no hay slots disponibles, nearestTimeSlots estará vacío
-    console.log('Slots cercanos encontrados:', this.nearestTimeSlots);
   }
 
   hasAvailableSlots(): boolean {
@@ -96,20 +97,46 @@ export class RescheduleModalComponent implements OnInit {
   }
 
   onSubmit() {
-    if (this.rescheduleForm.valid) {
-      const selectedTime = this.rescheduleForm.get('selectedTime')?.value;
-      this.dialogRef.close({
-        rescheduled: true,
-        time: selectedTime
-      });
-    }
+    if (this.isSubmitting || !this.rescheduleForm.valid) return; // Prevenir múltiples envíos
+
+    this.isSubmitting = true;
+    this.errorMessage = '';
+    const selectedTime = this.rescheduleForm.get('selectedTime')?.value;
+
+    // Verificar nuevamente que el horario esté disponible antes de cerrar el modal
+    this.appointmentService.getAvailableTimeSlots(
+      this.data.doctorId,
+      this.data.originalDate
+    ).pipe(
+      finalize(() => {
+        this.isSubmitting = false;
+      })
+    ).subscribe({
+      next: (slots) => {
+        const isStillAvailable = slots.some(slot => slot.startTime === selectedTime);
+        if (isStillAvailable) {
+          this.dialogRef.close({
+            rescheduled: true,
+            time: selectedTime
+          });
+        } else {
+          this.errorMessage = 'El horario seleccionado ya no está disponible. Por favor, seleccione otro horario.';
+          this.loadAvailableTimeSlots(); // Recargar horarios disponibles
+        }
+      },
+      error: (error) => {
+        console.error('Error verificando disponibilidad:', error);
+        this.errorMessage = 'Error al verificar disponibilidad del horario';
+      }
+    });
   }
 
   onCancel() {
-    this.dialogRef.close({ rescheduled: false });
+    if (!this.isSubmitting) {
+      this.dialogRef.close({ rescheduled: false });
+    }
   }
 
-  // Helper para mostrar si un slot es anterior o posterior
   getSlotDescription(slot: TimeSlot): string {
     return slot.startTime < this.data.originalTime ?
       'Horario anterior disponible' :

@@ -13,6 +13,11 @@
 
     <p>Ya ha sido reservada por otro paciente.</p>
 
+    <!-- Mostrar mensaje de error si existe -->
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
     <div *ngIf="hasAvailableSlots()" class="alternative-slots">
       <h3>Horarios alternativos disponibles más cercanos:</h3>
       <form [formGroup]="rescheduleForm">
@@ -21,7 +26,8 @@
             <input type="radio"
                    [id]="slot.startTime"
                    formControlName="selectedTime"
-                   [value]="slot.startTime">
+                   [value]="slot.startTime"
+                   [disabled]="isSubmitting">
             <label [for]="slot.startTime">
               <span class="slot-time">{{slot.startTime}} - {{slot.endTime}}</span>
               <span class="slot-description">{{getSlotDescription(slot)}}</span>
@@ -42,14 +48,20 @@
     <p>Buscando horarios disponibles...</p>
   </div>
 
+  <div class="loading-indicator" *ngIf="isSubmitting">
+    <span class="loading-spinner"></span>
+    <p>Agendando cita...</p>
+  </div>
+
   <div class="modal-actions">
     <button class="submit-button"
             *ngIf="hasAvailableSlots()"
-            [disabled]="!rescheduleForm.valid || isLoading"
+            [disabled]="!rescheduleForm.valid || isSubmitting || isLoading"
             (click)="onSubmit()">
-      Agendar en nuevo horario
+      {{ isSubmitting ? 'Agendando...' : 'Agendar en nuevo horario' }}
     </button>
     <button class="reset-button"
+            [disabled]="isSubmitting"
             (click)="onCancel()">
       Cancelar
     </button>
