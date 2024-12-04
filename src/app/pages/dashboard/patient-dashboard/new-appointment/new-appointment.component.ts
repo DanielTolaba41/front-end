@@ -151,7 +151,10 @@ export class NewAppointmentComponent implements OnInit {
     );
 
     const dialogRef = this.dialog.open(RescheduleModalComponent, {
-      width: '500px',
+      maxWidth: '100vw',
+      width: '100%',
+      height: '100%',
+      panelClass: 'full-screen-modal',
       disableClose: true,
       data: {
         doctorId: originalRequest.doctorId,
@@ -160,20 +163,6 @@ export class NewAppointmentComponent implements OnInit {
         specialtyName: selectedSpecialty?.name || '',
         doctorName: selectedDoctor ?
           `${selectedDoctor.user.name} ${selectedDoctor.user.lastName}` : ''
-      }
-    });
-
-    dialogRef.afterClosed().subscribe(result => {
-      this.isLoading = false;
-
-      if (result?.rescheduled) {
-        const newRequest = {
-          ...originalRequest,
-          appointmentTime: result.time
-        };
-
-        this.isLoading = true;
-        this.createAppointment(newRequest);
       }
     });
   }
