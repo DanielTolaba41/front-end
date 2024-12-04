@@ -195,7 +195,6 @@ export class AppointmentsControlComponent implements OnInit, OnDestroy {
 
   private getPatient(id: string): Promise<string> {
     return new Promise((resolve, reject) => {
-      // Primero intentar obtener del cache
       if (this.patientCache.has(id)) {
         const cachedPatient = this.patientCache.get(id)!;
         const fullName = this.formatPatientName(cachedPatient);
@@ -203,7 +202,6 @@ export class AppointmentsControlComponent implements OnInit, OnDestroy {
         return;
       }
 
-      // Si no está en cache, hacer la llamada al servicio
       this.patientService.getDataPatient(id).subscribe({
         next: (patient) => {
           this.patientCache.set(id, patient);
@@ -219,9 +217,9 @@ export class AppointmentsControlComponent implements OnInit, OnDestroy {
   }
 
   private formatPatientName(patient: Patient): string {
-    const firstName = patient.user.firstName || '';
+    const name = patient.user.firstName || '';
     const lastName = patient.user.lastName || '';
-    return `${firstName} ${lastName}`.trim() || 'Nombre no disponible';
+    return `${name} ${lastName}`.trim() || 'Nombre no disponible';
   }
 
   private getDefaultAppointment(): AppointmentPatient {
