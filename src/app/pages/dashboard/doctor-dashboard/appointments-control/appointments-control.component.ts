@@ -24,6 +24,7 @@ export class AppointmentsControlComponent {
   appointments: AppointmentPatient[] = [];
   AppointmentStatus = AppointmentStatus;
   private patientCache = new Map<string, Patient>();
+  private intervalId: any;
 
   constructor(
     private appointmentsService: AppointmentsService,
@@ -33,6 +34,11 @@ export class AppointmentsControlComponent {
   ngOnInit() {
     console.log('Component initialized');
     this.loadAppointments();
+    this.startPolling();
+  }
+
+  ngOnDestroy() {
+    this.stopPolling();
   }
 
   loadAppointments() {
@@ -50,6 +56,9 @@ export class AppointmentsControlComponent {
         console.error('Error loading appointments:', error);
       }
     });
+    complete: () => {
+      setInterval(() => this.loadAppointments(), 1000); 
+    }
   }
 
   private async transformAppointments(appointments: any[]): Promise<AppointmentPatient[]> {
@@ -111,6 +120,7 @@ export class AppointmentsControlComponent {
   }
 
   onDateChange(event: Event): void {
+    this.loadAppointments()
     const inputDate = (event.target as HTMLInputElement).value;
     const [year, month, day] = inputDate.split('-').map(Number);
     const localDate = new Date(year, month - 1, day);
@@ -155,6 +165,18 @@ export class AppointmentsControlComponent {
       description: 'Error en datos',
       status: 'PENDING',
     };
+  }
+
+  private startPolling() {
+    this.intervalId = setInterval(() => {
+      this.loadAppointments();
+    }, 5000); // Ajusta el intervalo según tus necesidades (en milisegundos)
+  }
+
+  private stopPolling() {
+    if (this.intervalId) {
+      clearInterval(this.intervalId);
+    }
   }
 
 }
