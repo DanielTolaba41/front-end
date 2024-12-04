@@ -75,7 +75,6 @@ export class AppointmentsControlComponent implements OnInit, OnDestroy {
       next: async (response: any) => {
         const newAppointments = await this.transformAppointments(response);
         
-        // Comparar con las citas actuales para detectar cambios
         if (this.hasAppointmentsChanged(newAppointments)) {
           console.log('Appointments updated!');
           this.appointments = newAppointments;
@@ -100,7 +99,6 @@ export class AppointmentsControlComponent implements OnInit, OnDestroy {
       return true;
     }
 
-    // Comparar cada cita para detectar cambios en el estado o detalles
     return newAppointments.some(newAppointment => {
       const existingAppointment = this.appointments.find(a => a.id === newAppointment.id);
       if (!existingAppointment) return true;
@@ -118,13 +116,18 @@ export class AppointmentsControlComponent implements OnInit, OnDestroy {
     try {
       const transformedAppointments = await Promise.all(appointments.map(async (apt: any) => {
         try {
+          if (!apt.patient?.id) {
+            console.error('Invalid patient ID for appointment:', apt);
+            return this.getDefaultAppointment();
+          }
+
           const patientName = await this.getPatient(apt.patient.id);
           
           return {
             id: apt.id || '',
             date: apt.appointmentDate || '',
             time: apt.appointmentTime || '',
-            patientName,
+            patientName: patientName,
             description: apt.reason || 'Sin descripción',
             status: apt.status || 'PENDING',
           };
@@ -191,24 +194,34 @@ export class AppointmentsControlComponent implements OnInit, OnDestroy {
 
 
   private getPatient(id: string): Promise<string> {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      // Primero intentar obtener del cache
       if (this.patientCache.has(id)) {
         const cachedPatient = this.patientCache.get(id)!;
-        resolve(`${cachedPatient.user.firstName} ${cachedPatient.user.lastName}`);
+        const fullName = this.formatPatientName(cachedPatient);
+        resolve(fullName);
         return;
       }
 
+      // Si no está en cache, hacer la llamada al servicio
       this.patientService.getDataPatient(id).subscribe({
         next: (patient) => {
           this.patientCache.set(id, patient);
-          resolve(`${patient.user.name} ${patient.user.lastName}`);
+          const fullName = this.formatPatientName(patient);
+          resolve(fullName);
         },
         error: (error) => {
           console.error('Error fetching patient data:', error);
-          resolve('Error al cargar paciente');
+          reject('Error al cargar paciente');
         }
       });
     });
+  }
+
+  private formatPatientName(patient: Patient): string {
+    const firstName = patient.user.firstName || '';
+    const lastName = patient.user.lastName || '';
+    return `${firstName} ${lastName}`.trim() || 'Nombre no disponible';
   }
 
   private getDefaultAppointment(): AppointmentPatient {
