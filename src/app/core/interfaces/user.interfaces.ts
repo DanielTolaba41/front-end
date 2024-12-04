@@ -18,6 +18,7 @@ export interface User {
   };
 }
 
+
 export enum UserRole {
   ADMIN = 'admin',
   PATIENT = 'patient',

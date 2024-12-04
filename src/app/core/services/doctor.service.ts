@@ -35,6 +35,7 @@ export class DoctorService {
     );
   }
 
+
   getAllDoctors(): Observable<any[]> {
     return this.http.get<any[]>(this.baseUrl, {
       headers: this.getHeaders()

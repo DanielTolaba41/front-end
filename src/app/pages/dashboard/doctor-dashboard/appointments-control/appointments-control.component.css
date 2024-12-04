@@ -17,6 +17,9 @@
 }
 
 .control-container {
+  display: flex;
+  position: relative;
+  flex-direction: column;
   padding: 1.5rem;
   max-width: 1200px;
   margin: 0 auto;

@@ -58,3 +58,11 @@ export interface Appointment {
   description?: string;
   status: string;
 }
+export interface AppointmentPatient {
+  id: string;
+  date: string;
+  time: string;
+  patientName: string;
+  description?: string;
+  status: string;
+}
