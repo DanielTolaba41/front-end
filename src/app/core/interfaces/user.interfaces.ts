@@ -17,6 +17,20 @@ export interface User {
   phoneNumber?: string;
 }
 
+
+export interface UserP {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  createdAt: Date;
+  updatedAt: Date;
+  isActive: boolean;
+  profileImage?: string;
+  phoneNumber?: string;
+}
+
 export interface Patient {
   id: string;
   user: User;

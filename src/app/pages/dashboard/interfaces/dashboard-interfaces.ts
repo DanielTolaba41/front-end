@@ -1,7 +1,7 @@
 // src/app/pages/dashboard/interfaces/dashboard-interfaces.ts
 
 import { Doctor } from "../../../core/interfaces/doctor.interface";
-import { User } from "../../../core/interfaces/user.interfaces";
+import { User, UserP } from "../../../core/interfaces/user.interfaces";
 
 export enum AppointmentStatus {
   PENDING = 'PENDING',
@@ -29,7 +29,7 @@ export interface Appointment {
   specialty: string;
   consultingRoom: string;
   doctor: Doctor;
-  patient: User;
+  patient: UserP;
   description: string;
   status: AppointmentStatus;
   patientName?: string;
