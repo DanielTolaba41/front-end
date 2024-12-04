@@ -120,14 +120,15 @@ export class AppointmentsControlComponent implements OnInit, OnDestroy {
             console.error('Invalid patient ID for appointment:', apt);
             return this.getDefaultAppointment();
           }
-
-          const patientName = await this.getPatient(apt.patient.id);
+  
+          // Obtener y construir el nombre completo del paciente
+          const patientFullName = await this.getPatient(apt.patient.id);
           
           return {
             id: apt.id || '',
             date: apt.appointmentDate || '',
             time: apt.appointmentTime || '',
-            patientName: patientName,
+            patientName: patientFullName,
             description: apt.reason || 'Sin descripción',
             status: apt.status || 'PENDING',
           };
@@ -136,7 +137,7 @@ export class AppointmentsControlComponent implements OnInit, OnDestroy {
           return this.getDefaultAppointment();
         }
       }));
-
+  
       return transformedAppointments;
     } catch (error) {
       console.error('Error in transformAppointments:', error);
@@ -195,18 +196,20 @@ export class AppointmentsControlComponent implements OnInit, OnDestroy {
 
   private getPatient(id: string): Promise<string> {
     return new Promise((resolve, reject) => {
+      // Verificar el caché primero
       if (this.patientCache.has(id)) {
         const cachedPatient = this.patientCache.get(id)!;
-        const fullName = this.formatPatientName(cachedPatient);
-        resolve(fullName);
+        resolve(this.formatPatientName(cachedPatient));
         return;
       }
-
+  
+      // Si no está en caché, obtener del servicio
       this.patientService.getDataPatient(id).subscribe({
         next: (patient) => {
+          // Guardar en caché
           this.patientCache.set(id, patient);
-          const fullName = this.formatPatientName(patient);
-          resolve(fullName);
+          // Formatear y devolver el nombre completo
+          resolve(this.formatPatientName(patient));
         },
         error: (error) => {
           console.error('Error fetching patient data:', error);
@@ -217,9 +220,18 @@ export class AppointmentsControlComponent implements OnInit, OnDestroy {
   }
 
   private formatPatientName(patient: Patient): string {
-    const name = patient.user.firstName || '';
+    // Verificar que existan tanto el objeto user como sus propiedades
+    if (!patient?.user) {
+      return 'Nombre no disponible';
+    }
+  
+    const firstName = patient.user.firstName || '';
     const lastName = patient.user.lastName || '';
-    return `${name} ${lastName}`.trim() || 'Nombre no disponible';
+  
+    // Log para debugging
+    console.log('Formatting name:', { firstName, lastName, patient });
+  
+    return firstName && lastName ? `${firstName} ${lastName}`.trim() : 'Nombre no disponible';
   }
 
   private getDefaultAppointment(): AppointmentPatient {
