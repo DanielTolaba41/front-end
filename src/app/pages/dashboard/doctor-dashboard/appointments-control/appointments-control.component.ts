@@ -56,9 +56,6 @@ export class AppointmentsControlComponent {
         console.error('Error loading appointments:', error);
       }
     });
-    complete: () => {
-      setInterval(() => this.loadAppointments(), 1000); 
-    }
   }
 
   private async transformAppointments(appointments: any[]): Promise<AppointmentPatient[]> {
@@ -170,7 +167,7 @@ export class AppointmentsControlComponent {
   private startPolling() {
     this.intervalId = setInterval(() => {
       this.loadAppointments();
-    }, 5000); // Ajusta el intervalo según tus necesidades (en milisegundos)
+    }, 30000);
   }
 
   private stopPolling() {
