@@ -1,14 +1,15 @@
 // src/app/pages/dashboard/patient-dashboard/new-appointment/new-appointment.component.ts
-
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { Router } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { AppointmentService } from '../../../../core/services/new-appointment.service';
 import { AppointmentRequest, AppointmentResponse, TimeSlot } from '../../../../core/interfaces/appointment.interface';
 import { Doctor } from '../../../../core/interfaces/doctor.interface';
 import { Specialty } from '../../../../core/interfaces/specialty.interface';
 import { AuthService } from '../../../../core/services/auth.service';
+import { RescheduleModalComponent, RescheduleModalData } from './reschedule-modal/reschedule-modal.component';
 
 interface AppointmentFormControls {
   specialtyId: FormControl<string | null>;
@@ -23,7 +24,8 @@ interface AppointmentFormControls {
   standalone: true,
   imports: [
     CommonModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    MatDialogModule
   ],
   templateUrl: './new-appointment.component.html',
   styleUrls: ['./new-appointment.component.css']
@@ -42,13 +44,15 @@ export class NewAppointmentComponent implements OnInit {
     private fb: FormBuilder,
     private appointmentService: AppointmentService,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
     this.initForm();
     this.loadSpecialties();
   }
+
 
   private initForm(): void {
     this.appointmentForm = this.fb.group<AppointmentFormControls>({
@@ -87,13 +91,102 @@ export class NewAppointmentComponent implements OnInit {
     });
   }
 
+  onSubmit(): void {
+    if (this.appointmentForm.valid && !this.isLoading) {
+      this.isLoading = true;
+      this.errorMessage = '';
+      this.successMessage = '';
+
+      const formValue = this.appointmentForm.value;
+      const selectedDate = new Date(formValue.appointmentDate ?? '');
+      selectedDate.setMinutes(selectedDate.getMinutes() + selectedDate.getTimezoneOffset());
+
+      const appointmentRequest: AppointmentRequest = {
+        doctorId: formValue.doctorId ?? '',
+        appointmentDate: selectedDate,
+        appointmentTime: formValue.appointmentTime ?? '',
+        reason: formValue.reason ?? ''
+      };
+
+      this.createAppointment(appointmentRequest);
+    } else {
+      this.markFormGroupTouched(this.appointmentForm);
+    }
+  }
+
+  private createAppointment(appointmentRequest: AppointmentRequest) {
+    this.appointmentService.createAppointment(appointmentRequest).subscribe({
+      next: (response) => this.handleSuccessfulBooking(response),
+      error: (error) => {
+        if (error.code === 'CONCURRENT_BOOKING') {
+          this.handleConcurrencyError(appointmentRequest);
+        } else {
+          this.errorMessage = error.message || 'No se pudo agendar la cita';
+          this.isLoading = false;
+        }
+      }
+    });
+  }
+
+  private handleSuccessfulBooking(response: AppointmentResponse) {
+    this.successMessage = 'La cita se ha agendado correctamente';
+    const userRole = this.authService.getCurrentUser()?.role.toLowerCase();
+    const appointmentsRoute = `/dashboard/${userRole}/appointments`;
+
+    setTimeout(() => {
+      this.router.navigate([appointmentsRoute])
+        .then(() => console.log('Navegación exitosa a:', appointmentsRoute))
+        .catch(err => {
+          console.error('Error en la navegación:', err);
+          this.errorMessage = 'Error al redireccionar';
+        });
+      this.isLoading = false;
+    }, 1500);
+  }
+
+  private handleConcurrencyError(originalRequest: AppointmentRequest): void {
+    const selectedDoctor = this.doctors.find(d => d.id === originalRequest.doctorId);
+    const selectedSpecialty = this.specialties.find(s =>
+      s.id === this.appointmentForm.get('specialtyId')?.value
+    );
+
+    const dialogRef = this.dialog.open(RescheduleModalComponent, {
+      maxWidth: '100vw',
+      width: '100%',
+      height: '100%',
+      panelClass: 'full-screen-modal',
+      disableClose: true,
+      data: {
+        doctorId: originalRequest.doctorId,
+        originalDate: originalRequest.appointmentDate.toISOString().split('T')[0],
+        originalTime: originalRequest.appointmentTime,
+        specialtyName: selectedSpecialty?.name || '',
+        doctorName: selectedDoctor ?
+          `${selectedDoctor.user.name} ${selectedDoctor.user.lastName}` : ''
+      }
+    });
+
+    // Manejar el resultado del modal
+    dialogRef.afterClosed().subscribe(result => {
+      if (result?.rescheduled) {
+        // Crear nueva solicitud con el horario seleccionado
+        const newRequest = {
+          ...originalRequest,
+          appointmentTime: result.time
+        };
+        this.createAppointment(newRequest); // Intentar crear la cita nuevamente
+      } else {
+        this.isLoading = false; // Si el usuario canceló, detener la carga
+      }
+    });
+  }
+
   private loadSpecialties(): void {
     this.isLoading = true;
     this.errorMessage = '';
 
     this.appointmentService.getSpecialties().subscribe({
       next: (specialties) => {
-        console.log('Specialties loaded:', specialties);
         this.specialties = specialties;
         this.isLoading = false;
       },
@@ -109,11 +202,8 @@ export class NewAppointmentComponent implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
 
-    console.log('Loading doctors for specialty:', specialty.name);
-
     this.appointmentService.getDoctorsBySpecialtyName(specialty.name).subscribe({
       next: (doctors) => {
-        console.log('Doctors loaded:', doctors);
         this.doctors = doctors;
         this.isLoading = false;
       },
@@ -140,12 +230,9 @@ export class NewAppointmentComponent implements OnInit {
   private loadAvailableTimeSlots(doctorId: string, date: string): void {
     this.isLoading = true;
     this.errorMessage = '';
-    const formattedDate = date;
-    console.log('Requesting time slots for:', { doctorId, date: formattedDate });
 
-    this.appointmentService.getAvailableTimeSlots(doctorId, formattedDate).subscribe({
+    this.appointmentService.getAvailableTimeSlots(doctorId, date).subscribe({
       next: (slots) => {
-        console.log('Available time slots:', slots);
         this.availableTimeSlots = slots || [];
         this.isLoading = false;
       },
@@ -154,80 +241,6 @@ export class NewAppointmentComponent implements OnInit {
         this.errorMessage = 'No se pudieron cargar los horarios disponibles';
         this.availableTimeSlots = [];
         this.isLoading = false;
-      }
-    });
-  }
-
-  formatTimeSlot(slot: TimeSlot): string {
-    return `${slot.startTime} - ${slot.endTime}`;
-  }
-
-  getDoctorFullName(doctor: Doctor): string {
-    return `${doctor.user.name} ${doctor.user.lastName}`;
-  }
-
-  onSubmit(): void {
-    if (this.appointmentForm.valid && !this.isLoading) {
-      this.isLoading = true;
-      this.errorMessage = '';
-      this.successMessage = '';
-
-      const formValue = this.appointmentForm.value;
-      const selectedDate = new Date(formValue.appointmentDate ?? '');
-
-      selectedDate.setMinutes(selectedDate.getMinutes() + selectedDate.getTimezoneOffset());
-
-      const appointmentRequest: AppointmentRequest = {
-        doctorId: formValue.doctorId ?? '',
-        appointmentDate: selectedDate,
-        appointmentTime: formValue.appointmentTime ?? '',
-        reason: formValue.reason ?? ''
-      };
-
-      console.log('Imprimir para Jhona', appointmentRequest.appointmentDate);
-      console.log('Submitting appointment request:', appointmentRequest);
-
-      this.appointmentService.createAppointment(appointmentRequest).subscribe({
-        next: (response: AppointmentResponse) => {
-          console.log('Appointment created successfully:', response);
-          this.successMessage = 'La cita se ha agendado correctamente';
-
-          // Obtener el rol del usuario actual
-          const userRole = this.authService.getCurrentUser()?.role.toLowerCase();
-
-          // Construir la ruta correcta
-          const appointmentsRoute = `/dashboard/${userRole}/appointments`;
-
-          // Navegar después de un breve delay para mostrar el mensaje de éxito
-          setTimeout(() => {
-            this.router.navigate([appointmentsRoute])
-              .then(() => {
-                console.log('Navegación exitosa a:', appointmentsRoute);
-                this.isLoading = false;
-              })
-              .catch(err => {
-                console.error('Error en la navegación:', err);
-                this.errorMessage = 'Error al redireccionar';
-                this.isLoading = false;
-              });
-          }, 1500);
-        },
-        error: (error) => {
-          console.error('Error al crear la cita:', error);
-          this.errorMessage = error.error?.message || 'No se pudo agendar la cita';
-          this.isLoading = false;
-        }
-      });
-    } else {
-      this.markFormGroupTouched(this.appointmentForm);
-    }
-  }
-
-  private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.values(formGroup.controls).forEach(control => {
-      control.markAsTouched();
-      if (control instanceof FormGroup) {
-        this.markFormGroupTouched(control);
       }
     });
   }
@@ -242,5 +255,18 @@ export class NewAppointmentComponent implements OnInit {
     this.availableTimeSlots = [];
     this.errorMessage = '';
     this.successMessage = '';
+  }
+
+  private markFormGroupTouched(formGroup: FormGroup): void {
+    Object.values(formGroup.controls).forEach(control => {
+      control.markAsTouched();
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      }
+    });
+  }
+
+  getDoctorFullName(doctor: Doctor): string {
+    return `${doctor.user.name} ${doctor.user.lastName}`;
   }
 }

@@ -1,0 +1,69 @@
+<!-- src/app/pages/dashboard/patient-dashboard/new-appointment/reschedule-modal/reschedule-modal.component.html -->
+<div class="reschedule-modal">
+  <h2>El horario seleccionado ya no está disponible</h2>
+
+  <div class="modal-content" *ngIf="!isLoading">
+    <p>La cita que intentaste agendar para:</p>
+    <div class="appointment-details">
+      <p><strong>Especialidad:</strong> {{data.specialtyName}}</p>
+      <p><strong>Doctor:</strong> {{data.doctorName}}</p>
+      <p><strong>Fecha:</strong> {{data.originalDate}}</p>
+      <p><strong>Hora:</strong> {{data.originalTime}}</p>
+    </div>
+
+    <p>Ya ha sido reservada por otro paciente.</p>
+
+    <!-- Mostrar mensaje de error si existe -->
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+
+    <div *ngIf="hasAvailableSlots()" class="alternative-slots">
+      <h3>Horarios alternativos disponibles más cercanos:</h3>
+      <form [formGroup]="rescheduleForm">
+        <div class="time-slots">
+          <div *ngFor="let slot of nearestTimeSlots" class="slot-option">
+            <input type="radio"
+                   [id]="slot.startTime"
+                   formControlName="selectedTime"
+                   [value]="slot.startTime"
+                   [disabled]="isSubmitting">
+            <label [for]="slot.startTime">
+              <span class="slot-time">{{slot.startTime}} - {{slot.endTime}}</span>
+              <span class="slot-description">{{getSlotDescription(slot)}}</span>
+            </label>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div *ngIf="!hasAvailableSlots()" class="no-slots">
+      <p>No hay horarios disponibles para esta fecha.</p>
+      <p>Por favor, selecciona otra fecha para ver la disponibilidad.</p>
+    </div>
+  </div>
+
+  <div class="loading-indicator" *ngIf="isLoading">
+    <span class="loading-spinner"></span>
+    <p>Buscando horarios disponibles...</p>
+  </div>
+
+  <div class="loading-indicator" *ngIf="isSubmitting">
+    <span class="loading-spinner"></span>
+    <p>Agendando cita...</p>
+  </div>
+
+  <div class="modal-actions">
+    <button class="submit-button"
+            *ngIf="hasAvailableSlots()"
+            [disabled]="!rescheduleForm.valid || isSubmitting || isLoading"
+            (click)="onSubmit()">
+      {{ isSubmitting ? 'Agendando...' : 'Agendar en nuevo horario' }}
+    </button>
+    <button class="reset-button"
+            [disabled]="isSubmitting"
+            (click)="onCancel()">
+      Cancelar
+    </button>
+  </div>
+</div>
