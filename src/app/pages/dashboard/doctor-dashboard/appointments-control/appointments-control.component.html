@@ -9,7 +9,6 @@
     {{ error }}
   </div>
 
-
   <div class="control-header">
     <h2>Control de Citas</h2>
     <div class="control-filters">
@@ -26,8 +25,10 @@
         <select id="status" [(ngModel)]="filterStatus">
           <option value="todos">Todos</option>
           <option value="PENDING">Pendientes</option>
+          <option value="INPROCESS">En Proceso</option>
           <option value="COMPLETED">Completadas</option>
           <option value="CANCELLED">Canceladas</option>
+          <option value="NOSHOW">No asistió</option>
         </select>
       </div>
     </div>
@@ -37,10 +38,9 @@
     <div class="appointment-card" *ngFor="let appointment of getFilteredAppointments()">
       <div class="appointment-header">
         <div class="time-badge">{{ appointment.time }}</div>
-        <div class="status-badge" [class.status-pendiente]="appointment.status === 'pendiente'"
-          [class.status-completada]="appointment.status === 'completada'"
-          [class.status-cancelada]="appointment.status === 'cancelada'">
-          {{ appointment.status }}
+        <div class="status-badge"
+             [ngClass]="getStatusClass(appointment.status)">
+          {{ getStatusText(appointment.status) }}
         </div>
       </div>
 
@@ -53,24 +53,49 @@
       </div>
 
       <div class="status-controls">
-        <button
-          class="status-btn pending"
-          [class.active]="appointment.status === 'PENDING'"
-          (click)="changeStatus(appointment,AppointmentStatus.PENDING)">
-          Pendiente
-        </button>
-        <button
-          class="status-btn completed"
-          [class.active]="appointment.status === 'COMPLETED'"
-          (click)="changeStatus(appointment, AppointmentStatus.COMPLETED)">
+        <!-- Botones para PENDING -->
+        <ng-container *ngIf="appointment.status === AppointmentStatus.PENDING">
+          <button
+            class="status-btn processing"
+            (click)="changeStatus(appointment, AppointmentStatus.PROCESSING)">
+            Iniciar Cita
+          </button>
+          <button
+            class="status-btn cancelled"
+            (click)="changeStatus(appointment, AppointmentStatus.CANCELLED)">
+            Cancelar
+          </button>
+          <button
+            class="status-btn noshow"
+            (click)="changeStatus(appointment, AppointmentStatus.NOSHOW)">
+            No Asistió
+          </button>
+        </ng-container>
+
+        <!-- Botones para PROCESSING -->
+        <ng-container *ngIf="appointment.status === AppointmentStatus.PROCESSING">
+          <button
+            class="status-btn completed"
+            (click)="changeStatus(appointment, AppointmentStatus.COMPLETED)">
+            Completar
+          </button>
+        </ng-container>
+
+        <!-- Estados finales -->
+        <div *ngIf="appointment.status === AppointmentStatus.COMPLETED"
+             class="status-badge status-COMPLETED">
           Completada
-        </button>
-        <button
-          class="status-btn cancelled"
-          [class.active]="appointment.status === 'CANCELLED'"
-          (click)="changeStatus(appointment, AppointmentStatus.CANCELLED)">
+        </div>
+
+        <div *ngIf="appointment.status === AppointmentStatus.CANCELLED"
+             class="status-badge status-CANCELLED">
           Cancelada
-        </button>
+        </div>
+
+        <div *ngIf="appointment.status === AppointmentStatus.NOSHOW"
+             class="status-badge status-NOSHOW">
+          No Asistió
+        </div>
       </div>
     </div>
 
@@ -78,4 +103,13 @@
       No hay citas para mostrar
     </div>
   </div>
+
+  <!-- Modal de Confirmación -->
+  <app-confirmation-modal
+    [isOpen]="showConfirmModal"
+    [title]="modalTitle"
+    [message]="modalMessage"
+    (confirm)="executeAction()"
+    (cancel)="closeConfirmationModal()">
+  </app-confirmation-modal>
 </div>

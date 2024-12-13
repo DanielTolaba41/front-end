@@ -2,7 +2,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpErrorResponse } from '@angular/common/http';
 import { Observable, tap, catchError, throwError } from 'rxjs';
-import { Appointment, AppointmentStatus } from '../../pages/dashboard/interfaces/dashboard-interfaces';
+
+import { AppointmentStatus, Appointment } from '../interfaces/appointment.interface';
 
 //export type AppointmentStatus = 'pendiente' | 'confirmada' | 'cancelada' | 'completada' | 'reprogramada';
 
@@ -98,13 +99,13 @@ export class AppointmentsService {
   }
 
   // Métodos de gestión de citas
-  updateAppointmentStatus(appointmentId: string, status: AppointmentStatus): Observable<Appointment> {
-    return this.http.patch<Appointment>(
-      `${this.baseUrl}/appointments/${appointmentId}/status`,
+  updateAppointmentStatus(appointmentId: string, status: AppointmentStatus): Observable<any> {
+    return this.http.patch(
+      `${this.baseUrl}/appointments/${appointmentId}`, // Removemos '/status' de la URL
       { status },
       { headers: this.getAuthHeaders() }
     ).pipe(
-      tap(appointment => console.log('Updated appointment status:', appointment)),
+      tap(response => console.log('Status update response:', response)),
       catchError(this.handleError)
     );
   }

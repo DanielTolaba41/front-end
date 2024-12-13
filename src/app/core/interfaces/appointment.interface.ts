@@ -1,10 +1,12 @@
 // src/app/core/interfaces/appointment.interface.ts
 export enum AppointmentStatus {
-  PENDING = 'PENDING',
-  CONFIRMED = 'CONFIRMED',
   COMPLETED = 'COMPLETED',
-  CANCELLED = 'CANCELLED'
+  CANCELLED = 'CANCELLED',
+  NOSHOW = 'NOSHOW',     // Cambiamos NO_SHOW a NOSHOW para que coincida
+  PROCESSING = 'INPROCESS',
+  PENDING = 'PENDING'
 }
+
 
 export interface AppointmentRequest {
   doctorId: string;
